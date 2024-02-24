@@ -336,7 +336,7 @@
     <div class="container">
         <div class="icon">
             <!-- Aqui você pode substituir o ícone por um de sua escolha -->
-            <img src="/icone.png"  alt="Ícone">
+            <img src="{{ asset('/icone.png') }}"  alt="Ícone">
         </div>
         <div class="phrase">
             <p style="font-size: 24px; font-style: italic;">EM BREVE</p>
