@@ -39,7 +39,8 @@ Route::prefix('/events')->controller(EventsController::class)->group(function ()
 
 Route::post('/webhook', function (Request $request) {
     // Executa o comando git pull origin main
-    $process = new Process(['git', 'pull', 'origin', 'main']);
+    $process = new Process(['/usr/bin/git', '-C', '/www/wwwroot/ejscell.com.br', 'pull', 'origin', 'main']);
+
     $process->run();
 
     // Salva a saída do comando em um arquivo de log
