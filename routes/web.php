@@ -37,25 +37,17 @@ Route::prefix('/events')->controller(EventsController::class)->group(function ()
     Route::get('/teste', 'teste');
 });
 
-Route::post('/webhook', function (Request $request) {
-    // Executa o comando git pull origin main
-    $process = new Process(['/usr/bin/git', '-C', '/www/wwwroot/ejscell.com.br', 'pull', 'origin', 'main']);
-
+Route::post('/webhook', function () {
+    $process = new Process(['./git_pull.sh']);
     $process->run();
 
-    // Salva a saída do comando em um arquivo de log
-    Log::info($process->getOutput());
-
-    // Verifica se houve erro na execução do comando
+    // Verifique se houve erro na execução do script
     if (!$process->isSuccessful()) {
-        // Salva a saída de erro do comando em um arquivo de log
-        Log::error($process->getErrorOutput());
-
         throw new ProcessFailedException($process);
     }
 
-    // Retorna uma resposta
-    return response()->json(['message' => 'Webhook executado com sucesso']);
+    // Exiba a saída do script
+    return $process->getOutput();
 });
 Route::prefix('/admin')->controller(AdminController::class)->group(function () {
     Route::get('/', 'login')->name('admin.login');
