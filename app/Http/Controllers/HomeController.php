@@ -15,6 +15,6 @@ class HomeController extends Controller
         }])
         ->get();
 
-        return view('home/index',compact('categories'));
+        return view('front/home/index',compact('categories'));
     }
 }
