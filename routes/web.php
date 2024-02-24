@@ -15,9 +15,11 @@ use App\Http\Controllers\admin\VendaController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\SangriaController;
-use App\Notifications\NewOrderNotification;
-use App\Notifications\UserNotification;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +37,25 @@ Route::prefix('/events')->controller(EventsController::class)->group(function ()
     Route::get('/teste', 'teste');
 });
 
+Route::post('/webhook', function (Request $request) {
+    // Executa o comando git pull origin main
+    $process = new Process(['git', 'pull', 'origin', 'main']);
+    $process->run();
+
+    // Salva a saída do comando em um arquivo de log
+    Log::info($process->getOutput());
+
+    // Verifica se houve erro na execução do comando
+    if (!$process->isSuccessful()) {
+        // Salva a saída de erro do comando em um arquivo de log
+        Log::error($process->getErrorOutput());
+
+        throw new ProcessFailedException($process);
+    }
+
+    // Retorna uma resposta
+    return response()->json(['message' => 'Webhook executado com sucesso']);
+});
 Route::prefix('/admin')->controller(AdminController::class)->group(function () {
     Route::get('/', 'login')->name('admin.login');
     Route::get('/sair', 'sair')->name('admin.sair');
