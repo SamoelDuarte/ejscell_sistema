@@ -26,7 +26,7 @@ $(document).ready(function()
 </script>
 </head>
 <body>
-<h1>TL MOTOS - <?php echo $this->config->item('application_version'); ?></h1>
+<h1>EJS CELL - <?php echo $this->config->item('application_version'); ?></h1>
 <h2>Sistema de vendas e estoque</h2>
 <!-- <div id="welcome_message">
 		<?php echo $this->lang->line('login_welcome_message'); ?>
