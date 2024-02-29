@@ -50,7 +50,7 @@ class Customer extends Person
 
 			// Agora, vamos buscar as categorias associadas ao cliente
 			$this->db->select('category_name');
-			$this->db->from('pos_customer_category_link');
+			$this->db->from('customer_category_link');
 			$this->db->where('person_id', $customer_id);
 			$categories_query = $this->db->get();
 
@@ -110,7 +110,7 @@ class Customer extends Person
 
 	
 		if (parent::save($person_data, $customer_id)) {
-			// ... Se a operação em pos_people (ou customers) for bem-sucedida ...
+			// ... Se a operação em people (ou customers) for bem-sucedida ...
 
 
 			if (!$customer_id or !$this->exists($customer_id)) {
@@ -137,7 +137,7 @@ class Customer extends Person
 				// Se $customer_id existir, atualize o registro existente em 'customers'
 				$this->db->where('person_id', $customer_id);
 				$customer_data['person_id'] = $customer_id;
-				$success_customers = $this->db->update('pos_customers', $customer_data);
+				$success_customers = $this->db->update('customers', $customer_data);
 
 				// Agora, remover dados existentes em 'customer_category_link' para a pessoa
 				if ($success_customers) {

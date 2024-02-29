@@ -211,7 +211,7 @@ class Sale_lib
 
 		if ($customer != -1) {
 
-			$this->CI->db->from('pos_customer_category_link');
+			$this->CI->db->from('customer_category_link');
 			$this->CI->db->where('person_id', $customer);
 			$this->CI->db->where('category_name', $category);
 			$verifydesconto = $this->CI->db->get();

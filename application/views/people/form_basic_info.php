@@ -148,7 +148,7 @@
 			array(
 				'name' => 'discount',
 				'id' => 'discount',
-				'value' => $person_info->desconto,
+				'value' => $person_info->desconto ? $person_info->desconto : 0,
 				'type' => 'number', // Define o tipo como número
 				'min' => '0',       // Define o valor mínimo
 				'max' => '99'       // Define o valor máximo

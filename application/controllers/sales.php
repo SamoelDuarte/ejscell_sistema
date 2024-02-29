@@ -36,13 +36,13 @@ class Sales extends Secure_area
 		if (!empty($itens)) {
 			foreach ($itens as $key => $iten) {
 
-				$this->db->from('pos_items');
+				$this->db->from('items');
 				$this->db->where('item_id',  $iten['item_id']);
 				$category = $this->db->get()->row();
 
 
 
-				$this->db->from('pos_customer_category_link');
+				$this->db->from('customer_category_link');
 				$this->db->where('person_id', $this->input->post("customer"));
 				$this->db->where('category_name', $category->category);
 				$verifydesconto = $this->db->get();
