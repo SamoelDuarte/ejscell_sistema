@@ -29,7 +29,7 @@
  */
 class CI_Migration {
 
-	protected $_migration_enabled = FALSE;
+	protected $_migration_enabled = TRUE;
 	protected $_migration_path = NULL;
 	protected $_migration_version = 0;
 
