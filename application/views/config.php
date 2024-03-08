@@ -366,7 +366,7 @@ echo form_close();
 
 
 		$.ajax({
-			url: "/ejscell_sistema/index.php/device/getStatus",
+			url:  window.location.origin+"/index.php/device/getStatus",
 			type: "GET",
 			data: {
 				sessionId: session
@@ -392,7 +392,7 @@ echo form_close();
 
 					console.log(updateStatusData);
 					$.ajax({
-						url: '/ejscell_sistema/index.php/device/updateStatus',
+						url: window.location.origin+'/index.php/device/updateStatus',
 						method: 'POST',
 						data: updateStatusData, // Envie os dados diretamente
 						success: function(response) {
