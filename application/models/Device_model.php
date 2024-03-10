@@ -50,24 +50,24 @@ class Device_model extends CI_Model
         return $this->db->affected_rows() > 0;
     }
 
-   
-        public function getSession()
-        {
-            // Verifica se há alguma linha na tabela devices com status AUTHENTICATED
-            $this->db->where('status', 'AUTHENTICATED');
-            $query = $this->db->get('devices');
-        
-            // Retorna verdadeiro se houver pelo menos uma linha com o status AUTHENTICATED
-            return $query->num_rows() > 0;
-        }
 
-        public function getSessionId()
-        {
-            // Verifica se há alguma linha na tabela devices com status AUTHENTICATED
-            $this->db->where('status', 'AUTHENTICATED');
-            $query = $this->db->get('devices');
-        
-            // Retorna verdadeiro se houver pelo menos uma linha com o status AUTHENTICATED
-            return $query->result_array();
-        }
+    public function getSession()
+    {
+        // Verifica se há alguma linha na tabela devices com status AUTHENTICATED
+        $this->db->where('status', 'AUTHENTICATED');
+        $query = $this->db->get('devices');
+
+        // Retorna verdadeiro se houver pelo menos uma linha com o status AUTHENTICATED
+        return $query->num_rows() > 0;
+    }
+
+    public function getSessionId()
+    {
+        // Verifica se há alguma linha na tabela devices com status AUTHENTICATED
+        $this->db->where('status', 'AUTHENTICATED');
+        $query = $this->db->get('devices');
+
+        // Retorna verdadeiro se houver pelo menos uma linha com o status AUTHENTICATED
+        return $query->result_array();
+    }
 }

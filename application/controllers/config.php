@@ -6,11 +6,12 @@ class Config extends Secure_area
 	function __construct()
 	{
 		parent::__construct('config');
+		$this->load->model('device_model');
 	}
 
 	public function index()
 	{
-		$this->load->model('device_model');
+	
 
 		$issession = $this->device_model->getSession();
 
