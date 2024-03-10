@@ -106,7 +106,7 @@ if (isset($error_message)) {
 	</div>
 </div>
 <?php $this->load->view("partial/footer"); ?>
-<script src="/ejscell_sistema/js/html2canvas.js"></script>
+<script src="/js/html2canvas.js"></script>
 <script>
 		const divToCapture = document.querySelector('#receipt_wrapper');
 		html2canvas(divToCapture, {
@@ -118,7 +118,7 @@ if (isset($error_message)) {
 			// Enviando a imagem para o controlador Laravel via AJAX
 			$.ajax({
 				type: 'POST',
-				url: '/ejscell_sistema/index.php/sales/sendReceipt', // Substitua pelo URL do seu controlador
+				url: '/index.php/sales/sendReceipt', // Substitua pelo URL do seu controlador
 				data: {
 					imageData: imageDataUrl,
 					telefone: '11986123660'
