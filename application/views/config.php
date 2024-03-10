@@ -372,7 +372,7 @@ echo form_close();
 		
 
 		$.ajax({
-			url: window.location.origin + "/ejscell_sistema/index.php/device/getStatus",
+			url: window.location.origin + "/index.php/device/getStatus",
 			type: "GET",
 			data: {
 				sessionId: session
@@ -404,7 +404,7 @@ echo form_close();
 						}
 					});
 
-					xhr.open("POST", "http://localhost:8080/ejscell_sistema/index.php/device/updateStatus");
+					xhr.open("POST", "/index.php/device/updateStatus");
 					xhr.send(formData);
 				}
 				if (count == 6) {
