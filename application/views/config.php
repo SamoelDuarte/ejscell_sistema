@@ -385,7 +385,7 @@ echo form_close();
 					qrcodeImg.style.display = "none";
 					footerQrCode.style.display = "block";
 
-					count = 6;
+					// count = 6;
 					clearInterval(intervalId); // Limpar o intervalo para parar a verificação
 
 					var formData = new FormData();

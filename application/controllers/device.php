@@ -48,7 +48,7 @@ class Device extends CI_Controller
 
         );
         // Chama o método update do modelo Device_model
-        $this->Device_model->update($data, $this->input->post('id'));
+        $this->device_model->update($data, $this->input->post('id'));
 
         // Retorna uma resposta JSON
     }
