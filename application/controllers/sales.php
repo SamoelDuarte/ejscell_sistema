@@ -30,7 +30,7 @@ class Sales extends Secure_area
 	{
 		$itens = $this->sale_lib->get_cart();
 
-		
+
 
 		$customer_id = $this->input->post("customer");
 		if (!empty($itens)) {
@@ -62,7 +62,7 @@ class Sales extends Secure_area
 			$this->sale_lib->set_cart($itens);
 		}
 
-		
+
 		$this->sale_lib->set_customer($customer_id);
 		$this->_reload();
 	}
@@ -233,9 +233,97 @@ class Sales extends Secure_area
 				$this->email->message($this->load->view("sales/receipt_email", $data, true));
 				$this->email->send();
 			}
+
+			$this->load->model('device_model');
+
+			// $issession = $this->device_model->getSession();
+
+
+
+			// if (!empty($cust_info->phone_number) && $issession) {
+			// 	$device = $this->device_model->getSessionId();
+			// 	$this->sendImage($device[0]['session'], $cust_info->phone_number, $pdfFilePath, 'Sua Nota');
+			// }
 		}
 		$this->load->view("sales/receipt", $data);
-		$this->sale_lib->clear_all();
+		// $this->sale_lib->clear_all();
+	}
+
+	public function sendReceipt()
+	{
+		$this->load->model('device_model');
+		// Obtenha os dados da imagem da solicitação POST
+		$imageData = $this->input->post('imageData');
+		$telefone = $this->input->post('telefone');
+
+		// Remova qualquer formatação do número de telefone
+		$telefone = preg_replace('/[^0-9]/', '', $telefone);
+
+		// Verifique se o número de telefone tem exatamente 11 dígitos
+		if (strlen($telefone) === 11) {
+			// Decodifique a imagem a partir do formato base64
+			$imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
+			$imageData = base64_decode($imageData);
+
+			// Especifique o diretório de destino para salvar a imagem
+			$imageDirectory = 'uploads/images/';
+
+			// Gere um nome único para a imagem
+			$imageFileName = 'image_' . uniqid() . '.png';
+
+			// Caminho completo para o arquivo de imagem
+			$imageFilePath = $imageDirectory . $imageFileName;
+
+			// Salve a imagem no arquivo
+			if (file_put_contents($imageFilePath, $imageData)) {
+				// Se a imagem foi salva com sucesso, envie o caminho do arquivo para a função sendImage
+				// Substitua 'session' pelo método correto para obter a sessão do dispositivo
+				$device = $this->device_model->getSessionId();
+				$this->sendImage($device[0]['session'], '55' . $telefone, $imageFilePath, '');
+				// Excluir a imagem após enviá-la
+				unlink($imageFilePath);
+			} else {
+			}
+		} else {
+		}
+	}
+
+	public function sendImage($session, $phone, $nomeImagen, $detalhes)
+	{
+		$curl = curl_init();
+
+		$send = array(
+			"number" => $phone,
+			"message" => array(
+				"image" => array(
+					"url" => base_url($nomeImagen)
+				),
+				"caption" => $detalhes
+			),
+			"delay" => 3
+		);
+		$url = 'http://saboresdonordeste.com.br/' . $session . '/messages/send';
+
+		curl_setopt_array($curl, array(
+			CURLOPT_URL => $url,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => '',
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 0,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => 'POST',
+			CURLOPT_POSTFIELDS => json_encode($send),
+			CURLOPT_HTTPHEADER => array(
+				'secret: $2a$12$VruN7Mf0FsXW2mR8WV0gTO134CQ54AmeCR.ml3wgc9guPSyKtHMgC',
+				'Content-Type: application/json'
+			),
+		));
+
+		$response = curl_exec($curl);
+		//  file_put_contents(Utils::createCode() . ".txt", $response);
+
+		curl_close($curl);
 	}
 
 	function receipt($sale_id)

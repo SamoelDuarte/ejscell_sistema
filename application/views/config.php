@@ -286,9 +286,10 @@ echo form_open('config/save/', array('id' => 'config_form'));
 	<div id="preload">
 		<div class="loader"></div>
 	</div>
-	<img id="qrcode-img" src="<?= $qrcodeImgSrc ?>" alt="QR Code" />
-	<div class="card-footer server_connect " id="footer-qr-code" style="display: none">
-		<div class=" ">
+	<img id="qrcode-img" src="<?= $qrcodeImgSrc ?>" alt="QR Code"  style="<?= !empty($qrcodeImgSrc) ? 'display: block;' : 'display: none;' ?>" />
+<div class="card-footer server_connect" id="footer-qr-code" style="<?= empty($qrcodeImgSrc) ? 'display: block;' : 'display: none;' ?>">
+  
+		<div class="">
 			{{ __('Conectado  😎 ') }}
 		</div>
 	</div>
@@ -352,8 +353,12 @@ echo form_close();
 
 
 	setTimeout(function() {
-
-		qrcodeImg.style.display = "block";
+		if(session == ""){
+			clearInterval(intervalId); // Limpar o intervalo para parar a verificação
+		}else{
+			qrcodeImg.style.display = "block";
+		}
+		
 
 		const preload = document.getElementById("preload");
 		preload.style.display = "none";
@@ -364,9 +369,10 @@ echo form_close();
 
 	function verificarCondicao() {
 
+		
 
 		$.ajax({
-			url:  window.location.origin+"/index.php/device/getStatus",
+			url: window.location.origin + "/ejscell_sistema/index.php/device/getStatus",
 			type: "GET",
 			data: {
 				sessionId: session
@@ -382,31 +388,26 @@ echo form_close();
 					count = 6;
 					clearInterval(intervalId); // Limpar o intervalo para parar a verificação
 
-					var updateStatusData = {
-						"status": resposeJson['status'],
-						"name": resposeJson['me']['name'],
-						"jid": resposeJson['me']['jid'],
-						"picture": resposeJson['me']['picture'],
-						"id": id_device // Certifique-se de que id_device está definido corretamente
-					};
+					var formData = new FormData();
+					formData.append('status', resposeJson['status']);
+					formData.append('name', resposeJson['me']['name']);
+					formData.append('jid', resposeJson['me']['jid']);
+					formData.append('picture', resposeJson['me']['picture']);
+					formData.append('id', id_device);
 
-					console.log(updateStatusData);
-					$.ajax({
-						url: window.location.origin+'/index.php/device/updateStatus',
-						method: 'POST',
-						data: updateStatusData, // Envie os dados diretamente
-						success: function(response) {
-							// Lida com a resposta bem-sucedida aqui, se necessário
-							console.log('Sucesso:', response);
-						},
-						error: function(xhr, status, error) {
-							// Lida com erros aqui, se necessário
-							console.error('Erro:', error);
+					var xhr = new XMLHttpRequest();
+					xhr.withCredentials = true;
+
+					xhr.addEventListener("readystatechange", function() {
+						if (this.readyState === 4) {
+							console.log(this.responseText);
 						}
 					});
 
+					xhr.open("POST", "http://localhost:8080/ejscell_sistema/index.php/device/updateStatus");
+					xhr.send(formData);
 				}
-				if (count == 3) {
+				if (count == 6) {
 					location.reload();
 
 				}

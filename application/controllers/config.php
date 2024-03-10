@@ -9,29 +9,43 @@ class Config extends Secure_area
 	}
 
 	public function index()
-{
-    $this->load->model('device_model');
-    
-    $result = $this->device_model->deleteRowsWithStatusNotOne();
+	{
+		$this->load->model('device_model');
 
-    // Cria uma nova sessão e salva no banco de dados
-    $session = Utils::createCode();
-    $data = array(
-        "session" => $session
-    );
-    $id = $this->device_model->save($data);
+		$issession = $this->device_model->getSession();
 
-    // Obtém o caminho da imagem do QR code
-    $qrcodeImgSrc = $this->getQrCode($session);
 
-    // Carrega a view com os dados necessários
-    $send = array(
-        "qrcodeImgSrc" => $qrcodeImgSrc,
-        "session" => $session,
-		"device" => $id
-    );
-    $this->load->view("config", $send);
-}
+		if (!$issession) {
+			$this->device_model->deleteRowsWithStatusNotOne();
+			// Cria uma nova sessão e salva no banco de dados
+			$session = Utils::createCode();
+			$data = array(
+				"session" => $session
+			);
+			$id = $this->device_model->save($data);
+
+			// Obtém o caminho da imagem do QR code
+			$qrcodeImgSrc = $this->getQrCode($session);
+
+			// Carrega a view com os dados necessários
+			$send = array(
+				"qrcodeImgSrc" => $qrcodeImgSrc,
+				"session" => $session,
+				"device" => $id
+			);
+		} else{
+			$send = array(
+				"qrcodeImgSrc" => '',
+				"session" => '',
+				"device" => ''
+			);
+		}
+
+
+
+
+		$this->load->view("config", $send);
+	}
 
 	function getQrCode($session)
 	{

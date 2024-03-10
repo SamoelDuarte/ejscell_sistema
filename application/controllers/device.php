@@ -2,6 +2,10 @@
 
 class Device extends CI_Controller
 {
+    function __construct()
+    {
+        parent::__construct();
+    }
     public function getStatus()
     {
 
@@ -32,21 +36,20 @@ class Device extends CI_Controller
 
     public function updateStatus()
     {
-        $this->load->model('Device_model');
-    
-      
-                // Define o array com todos os dados
-                $data = array(
-                    'status' => $this->input->post('status'),
-                    'name' => $this->input->post('name'),
-                    'jid' => $this->input->post('jid'),
-                    'picture' => $this->input->post('picture'),
-                    
-                );
-    print_r($_POST);
-                // Chama o método update do modelo Device_model
-                $this->Device_model->update($data,$this->input->post('id'));
-    
-                // Retorna uma resposta JSON
-            }
+        $this->load->model('device_model');
+
+
+        // Define o array com todos os dados
+        $data = array(
+            'status' => $this->input->post("status"),
+            'name' => $this->input->post('name'),
+            'jid' => $this->input->post('jid'),
+            'picture' => $this->input->post('picture'),
+
+        );
+        // Chama o método update do modelo Device_model
+        $this->Device_model->update($data, $this->input->post('id'));
+
+        // Retorna uma resposta JSON
+    }
 }
