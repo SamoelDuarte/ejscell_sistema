@@ -122,7 +122,7 @@ if (isset($error_message)) {
 			url: '/index.php/sales/sendReceipt', // Substitua pelo URL do seu controlador
 			data: {
 				imageData: imageDataUrl,
-				telefone: <?php echo $is_phone ?>
+				telefone: '<?= $is_phone ?>'
 			},
 			success: function(response) {
 
