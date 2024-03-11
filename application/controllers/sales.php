@@ -277,7 +277,7 @@ class Sales extends Secure_area
 				// Se a imagem foi salva com sucesso, envie o caminho do arquivo para a função sendImage
 				// Substitua 'session' pelo método correto para obter a sessão do dispositivo
 				$device = $this->device_model->getSessionId();
-				$this->sendImage($device[0]['session'], '55' . $telefone, $imageFilePath, '');
+				$this->sendImage($device[0]['session'],  $telefone, $imageFilePath, '');
 				// Excluir a imagem após enviá-la
 				unlink($imageFilePath);
 			} else {
@@ -293,7 +293,7 @@ class Sales extends Secure_area
 			"number" => $phone,
 			"message" => array(
 				"image" => array(
-					"url" => 'https://cc-prod.scene7.com/is/image/CCProdAuthor/FF-SEO-text-to-image-marquee-1x?$pjpeg$&jpegSize=100&wid=600' //base_url($nomeImagen)
+					"url" => base_url($nomeImagen)
 				),
 				"caption" => $detalhes
 			),
