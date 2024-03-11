@@ -239,7 +239,7 @@ class Sales extends Secure_area
 				$this->email->message($this->load->view("sales/receipt_email", $data, true));
 				$this->email->send();
 			}
-			if ($this->sale_lib->get_phone_receipt() && !empty($cust_info->phone)) {
+			if ($this->sale_lib->get_phone_receipt() && !empty($cust_info->phone_number)) {
 				$data['is_phone'] = $this->sale_lib->get_phone_receipt();
 			}
 
