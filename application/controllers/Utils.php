@@ -1,11 +1,12 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
-class Utils {
+class Utils
+{
 
     public static function createPasswordHash($password, $salt)
     {
-        $CI =& get_instance();
+        $CI = &get_instance();
         $hashed = password_hash($password . $salt, PASSWORD_DEFAULT);
         return $hashed;
     }
@@ -62,7 +63,22 @@ class Utils {
 
     public static function sanitizePhone($phone)
     {
-        return str_replace(['.','+', '-', '/', '(', ')', ' '], '', $phone);
+        // Remove caracteres especiais do número
+        $phone = str_replace(['.', '+', '-', '/', '(', ')', ' '], '', $phone);
+        // Verifica se o número possui DDD (11 neste caso)
+        if (strlen($phone) == 9) {
+            // Adiciona o DDD 11 antes do número
+            $phone = '11' . $phone;
+        }
+        // Verifica se o número começa com 55
+        if (substr($phone, 0, 2) != '55') {
+            // Adiciona 55 no início do número
+            $phone = '55' . $phone;
+        }
+
+
+
+        return $phone;
     }
 
     public static function sanitizeFee($fee)
@@ -108,6 +124,6 @@ class Utils {
     public static function sanitizeJid($string)
     {
         $novaString = str_replace(':23@s.whatsapp.net', '', $string);
-        return $novaString; 
+        return $novaString;
     }
 }

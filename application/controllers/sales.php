@@ -84,6 +84,12 @@ class Sales extends Secure_area
 		$this->sale_lib->set_email_receipt($this->input->post('email_receipt'));
 	}
 
+	function set_phone_receipt()
+	{
+		$this->sale_lib->set_phone_receipt($this->input->post('phone_receipt'));
+	}
+
+
 	//Alain Multiple Payments
 	function add_payment()
 	{
@@ -233,17 +239,10 @@ class Sales extends Secure_area
 				$this->email->message($this->load->view("sales/receipt_email", $data, true));
 				$this->email->send();
 			}
+			if ($this->sale_lib->get_phone_receipt() && !empty($cust_info->phone)) {
+				$data['is_phone'] = $this->sale_lib->get_phone_receipt();
+			}
 
-			$this->load->model('device_model');
-
-			// $issession = $this->device_model->getSession();
-
-
-
-			// if (!empty($cust_info->phone_number) && $issession) {
-			// 	$device = $this->device_model->getSessionId();
-			// 	$this->sendImage($device[0]['session'], $cust_info->phone_number, $pdfFilePath, 'Sua Nota');
-			// }
 		}
 		$this->load->view("sales/receipt", $data);
 		// $this->sale_lib->clear_all();
@@ -296,7 +295,7 @@ class Sales extends Secure_area
 			"number" => $phone,
 			"message" => array(
 				"image" => array(
-					"url" => base_url($nomeImagen)
+					"url" => 'https://cc-prod.scene7.com/is/image/CCProdAuthor/FF-SEO-text-to-image-marquee-1x?$pjpeg$&jpegSize=100&wid=600' //base_url($nomeImagen)
 				),
 				"caption" => $detalhes
 			),
@@ -429,6 +428,7 @@ class Sales extends Secure_area
 		$data['items_module_allowed'] = $this->Employee->has_permission('items', $person_info->person_id);
 		$data['comment'] = $this->sale_lib->get_comment();
 		$data['email_receipt'] = $this->sale_lib->get_email_receipt();
+		$data['phone_receipt'] = $this->sale_lib->get_phone_receipt();
 		$data['payments_total'] = $this->sale_lib->get_payments_total();
 		$data['amount_due'] = $this->sale_lib->get_amount_due();
 		$data['payments'] = $this->sale_lib->get_payments();
@@ -446,6 +446,7 @@ class Sales extends Secure_area
 			$info = $this->Customer->get_info($customer_id);
 			$data['customer'] = $info->first_name . ' ' . $info->last_name;
 			$data['customer_email'] = $info->email;
+			$data['customer_phone'] = $info->phone_number;
 		}
 		$data['payments_cover_total'] = $this->_payments_cover_total();
 		$this->load->view("sales/register", $data);

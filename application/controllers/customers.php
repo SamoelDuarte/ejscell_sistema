@@ -1,5 +1,6 @@
 <?php
 require_once("person_controller.php");
+require_once("Utils.php");
 class Customers extends Person_controller
 {
 	function __construct()
@@ -66,7 +67,7 @@ class Customers extends Person_controller
 			'first_name' => $this->input->post('first_name'),
 			'last_name' => $this->input->post('last_name'),
 			'email' => $this->input->post('email'),
-			'phone_number' => $this->input->post('phone_number'),
+			'phone_number' => Utils::sanitizePhone($this->input->post('phone_number')),
 			'document' => $this->input->post('document'),
 			'desconto' => $this->input->post('discount'),
 			'address_1' => $this->input->post('address_1'),

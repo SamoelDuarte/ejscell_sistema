@@ -107,37 +107,43 @@ if (isset($error_message)) {
 </div>
 <?php $this->load->view("partial/footer"); ?>
 <script src="/js/html2canvas.js"></script>
-<script>
-		const divToCapture = document.querySelector('#receipt_wrapper');
-		html2canvas(divToCapture, {
-			scale: 2
-		}).then(function(canvas) {
-			// Convertendo o canvas em um URL de dados (base64)
-			const imageDataUrl = canvas.toDataURL('image/png', 0.9);
+<?php if ($this->sale_lib->get_phone_receipt() && !empty($cust_info->phone)) { ?>
+	<script>
+	const divToCapture = document.querySelector('#receipt_wrapper');
+	html2canvas(divToCapture, {
+		scale: 2
+	}).then(function(canvas) {
+		// Convertendo o canvas em um URL de dados (base64)
+		const imageDataUrl = canvas.toDataURL('image/png', 0.9);
 
-			// Enviando a imagem para o controlador Laravel via AJAX
-			$.ajax({
-				type: 'POST',
-				url: '/index.php/sales/sendReceipt', // Substitua pelo URL do seu controlador
-				data: {
-					imageData: imageDataUrl,
-					telefone: '11986123660'
-				},
-				success: function(response) {
+		// Enviando a imagem para o controlador Laravel via AJAX
+		$.ajax({
+			type: 'POST',
+			url: '/index.php/sales/sendReceipt', // Substitua pelo URL do seu controlador
+			data: {
+				imageData: imageDataUrl,
+				telefone: '<?php echo $cust_info->phone ?>'
+			},
+			success: function(response) {
 
-					if (response.status) {
-					
-					
-					} 
+				if (response.status) {
 
-				},
-				error: function(error) {
 
 				}
-			});
-		});
 
+			},
+			error: function(error) {
+
+			}
+		});
+	});
 </script>
+
+<?php
+}
+?>
+
+
 <?php if ($this->Appconfig->get('print_after_sale')) {
 ?>
 	<script type="text/javascript">

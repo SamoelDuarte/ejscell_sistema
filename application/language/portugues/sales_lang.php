@@ -78,5 +78,6 @@ $lang['sales_unsuspend_and_delete'] = 'Retomar Venda ou Excluir';
 $lang['sales_unsuspend'] = 'Retomar venda';
 $lang['sales_successfully_suspended_sale'] = 'Sua venda foi suspensa com sucesso!';
 $lang['sales_email_receipt'] = 'Destinatário de E-mail';
+$lang['sales_phone_receipt'] = 'Destinatário de Telefone';
 $lang['sales_payment_total']='Total de Pagamentos';
 ?>

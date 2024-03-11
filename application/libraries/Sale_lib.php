@@ -55,10 +55,19 @@ class Sale_lib
 	{
 		return $this->CI->session->userdata('email_receipt');
 	}
+	function get_phone_receipt()
+	{
+		return $this->CI->session->userdata('phone_receipt');
+	}
 
 	function set_email_receipt($email_receipt)
 	{
 		$this->CI->session->set_userdata('email_receipt', $email_receipt);
+	}
+
+	function set_phone_receipt($phone_receipt)
+	{
+		$this->CI->session->set_userdata('phone_receipt', $phone_receipt);
 	}
 
 	function clear_email_receipt()

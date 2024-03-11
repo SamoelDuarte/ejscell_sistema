@@ -234,6 +234,14 @@ if (isset($success)) {
 						'checked'     => (bool)$email_receipt,
 					)) . '<br />(' . $customer_email . ')<br />';
 				}
+				if (!empty($customer_phone)) {
+					echo $this->lang->line('sales_phone_receipt') . ': ' . form_checkbox(array(
+						'name'        => 'phone_receipt',
+						'id'          => 'phone_receipt',
+						'value'       => '1',
+						'checked'     => (bool)$phone_receipt,
+					)) . '<br />(' . $customer_phone . ')<br />';
+				}
 
 				if ($payments_cover_total) {
 					echo "<div class='small_button' id='finish_sale_button' style='float:left;margin-top:5px;'><span>" . $this->lang->line('sales_complete_sale') . "</span></div>";
@@ -399,6 +407,12 @@ if (isset($success)) {
 		$('#email_receipt').change(function() {
 			$.post('<?php echo site_url("sales/set_email_receipt"); ?>', {
 				email_receipt: $('#email_receipt').is(':checked') ? '1' : '0'
+			});
+		});
+
+		$('#phone_receipt').change(function() {
+			$.post('<?php echo site_url("sales/set_phone_receipt"); ?>', {
+				phone_receipt: $('#phone_receipt').is(':checked') ? '1' : '0'
 			});
 		});
 
