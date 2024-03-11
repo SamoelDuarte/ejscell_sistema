@@ -240,9 +240,8 @@ class Sales extends Secure_area
 				$this->email->send();
 			}
 			if ($this->sale_lib->get_phone_receipt() && !empty($cust_info->phone_number)) {
-				$data['is_phone'] = $this->sale_lib->get_phone_receipt();
+				$data['is_phone'] = $cust_info->phone_number;
 			}
-
 		}
 		$this->load->view("sales/receipt", $data);
 		// $this->sale_lib->clear_all();
@@ -259,7 +258,7 @@ class Sales extends Secure_area
 		$telefone = preg_replace('/[^0-9]/', '', $telefone);
 
 		// Verifique se o número de telefone tem exatamente 11 dígitos
-		if (strlen($telefone) === 11) {
+	
 			// Decodifique a imagem a partir do formato base64
 			$imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
 			$imageData = base64_decode($imageData);
@@ -283,8 +282,7 @@ class Sales extends Secure_area
 				unlink($imageFilePath);
 			} else {
 			}
-		} else {
-		}
+		
 	}
 
 	public function sendImage($session, $phone, $nomeImagen, $detalhes)
