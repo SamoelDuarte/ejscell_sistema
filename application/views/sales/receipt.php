@@ -107,7 +107,7 @@ if (isset($error_message)) {
 </div>
 <?php $this->load->view("partial/footer"); ?>
 <script src="/js/html2canvas.js"></script>
-<?php if (!empty($is_phone)) { ?>
+
 	<script>
 	const divToCapture = document.querySelector('#receipt_wrapper');
 	html2canvas(divToCapture, {
@@ -139,9 +139,7 @@ if (isset($error_message)) {
 	});
 </script>
 
-<?php
-}
-?>
+
 
 
 <?php if ($this->Appconfig->get('print_after_sale')) {
