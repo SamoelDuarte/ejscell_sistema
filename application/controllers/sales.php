@@ -244,7 +244,7 @@ class Sales extends Secure_area
 			}
 		}
 		$this->load->view("sales/receipt", $data);
-	 $this->sale_lib->clear_all();
+		$this->sale_lib->clear_all();
 	}
 
 	public function sendReceipt()
@@ -258,31 +258,30 @@ class Sales extends Secure_area
 		$telefone = preg_replace('/[^0-9]/', '', $telefone);
 
 		// Verifique se o número de telefone tem exatamente 11 dígitos
-	
-			// Decodifique a imagem a partir do formato base64
-			$imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
-			$imageData = base64_decode($imageData);
 
-			// Especifique o diretório de destino para salvar a imagem
-			$imageDirectory = 'uploads/images/';
+		// Decodifique a imagem a partir do formato base64
+		$imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
+		$imageData = base64_decode($imageData);
 
-			// Gere um nome único para a imagem
-			$imageFileName = 'image_' . uniqid() . '.png';
+		// Especifique o diretório de destino para salvar a imagem
+		$imageDirectory = 'uploads/images/';
 
-			// Caminho completo para o arquivo de imagem
-			$imageFilePath = $imageDirectory . $imageFileName;
+		// Gere um nome único para a imagem
+		$imageFileName = 'image_' . uniqid() . '.png';
 
-			// Salve a imagem no arquivo
-			if (file_put_contents($imageFilePath, $imageData)) {
-				// Se a imagem foi salva com sucesso, envie o caminho do arquivo para a função sendImage
-				// Substitua 'session' pelo método correto para obter a sessão do dispositivo
-				$device = $this->device_model->getSessionId();
-				$this->sendImage($device[0]['session'],  $telefone, $imageFilePath, '');
-				// Excluir a imagem após enviá-la
-				unlink($imageFilePath);
-			} else {
-			}
-		
+		// Caminho completo para o arquivo de imagem
+		$imageFilePath = $imageDirectory . $imageFileName;
+
+		// Salve a imagem no arquivo
+		if (file_put_contents($imageFilePath, $imageData)) {
+			// Se a imagem foi salva com sucesso, envie o caminho do arquivo para a função sendImage
+			// Substitua 'session' pelo método correto para obter a sessão do dispositivo
+			$device = $this->device_model->getSessionId();
+			$this->sendImage($device[0]['session'],  $telefone, $imageFilePath, '');
+			// Excluir a imagem após enviá-la
+			unlink($imageFilePath);
+		} else {
+		}
 	}
 
 	public function sendImage($session, $phone, $nomeImagen, $detalhes)
