@@ -28,7 +28,8 @@ if (isset($error_message)) {
 		<tr>
 			<th style="width:25%;"><?php echo $this->lang->line('sales_item_number'); ?></th>
 			<th style="width:25%;"><?php echo $this->lang->line('items_item'); ?></th>
-			<th style="width:17%;"><?php echo $this->lang->line('common_price'); ?></th>
+			<th style="width:13%;"><?php echo $this->lang->line('common_price'); ?></th>
+			<th style="width:5%;">Garantia</th>
 			<th style="width:16%;text-align:center;"><?php echo $this->lang->line('sales_quantity'); ?></th>
 			<th style="width:16%;text-align:center;"><?php echo $this->lang->line('sales_discount'); ?></th>
 			<th style="width:17%;text-align:right;"><?php echo $this->lang->line('sales_total'); ?></th>
@@ -40,6 +41,7 @@ if (isset($error_message)) {
 				<td><?php echo $item['item_number']; ?></td>
 				<td><span class='long_name'><?php echo $item['name']; ?></span><span class='short_name'><?php echo character_limiter($item['name'], 10); ?></span></td>
 				<td><?php echo to_currency($item['price']); ?></td>
+				<td><?php echo $item['garantia']; ?> Dias</td>
 				<td style='text-align:center;'><?php echo $item['quantity']; ?></td>
 				<td style='text-align:center;'><?php echo $item['discount']; ?></td>
 				<td style='text-align:right;'><?php echo to_currency($item['price'] * $item['quantity'] - $item['price'] * $item['quantity'] * $item['discount'] / 100); ?></td>
@@ -54,6 +56,7 @@ if (isset($error_message)) {
 		<?php
 		}
 		?>
+		
 		<tr>
 			<td colspan="4" style='text-align:right;border-top:2px solid #000000;'><?php echo $this->lang->line('sales_sub_total'); ?></td>
 			<td colspan="2" style='text-align:right;border-top:2px solid #000000;'><?php echo to_currency($subtotal); ?></td>

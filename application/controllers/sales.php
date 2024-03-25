@@ -243,6 +243,7 @@ class Sales extends Secure_area
 				$data['is_phone'] = $cust_info->phone_number;
 			}
 		}
+	
 		$this->load->view("sales/receipt", $data);
 		$this->sale_lib->clear_all();
 	}
@@ -298,7 +299,7 @@ class Sales extends Secure_area
 			),
 			"delay" => 3
 		);
-		$url = 'http://saboresdonordeste.com.br/' . $session . '/messages/send';
+		$url = 'http://aluguelmetaverso.com.br/' . $session . '/messages/send';
 
 		curl_setopt_array($curl, array(
 			CURLOPT_URL => $url,
@@ -344,6 +345,7 @@ class Sales extends Secure_area
 			$data['customer'] = $cust_info->first_name . ' ' . $cust_info->last_name;
 		}
 		$data['sale_id'] = 'POS ' . $sale_id;
+		
 		$this->load->view("sales/receipt", $data);
 		$this->sale_lib->clear_all();
 	}

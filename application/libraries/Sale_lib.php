@@ -239,6 +239,7 @@ class Sale_lib
 				'item_id' => $item_id,
 				'line' => $insertkey,
 				'name' => $this->CI->Item->get_info($item_id)->name,
+				'garantia' => $this->CI->Item->get_info($item_id)->garantia,
 				'item_number' => $this->CI->Item->get_info($item_id)->item_number,
 				'description' => $description != null ? $description : $this->CI->Item->get_info($item_id)->description,
 				'serialnumber' => $serialnumber != null ? $serialnumber : '',
@@ -489,7 +490,14 @@ class Sale_lib
 	{
 		$subtotal = 0;
 		foreach ($this->get_cart() as $item) {
-			$subtotal += ($item['price'] * $item['quantity'] - $item['price'] * $item['quantity'] * $item['discount'] / 100);
+			// Calcula o subtotal do item sem desconto.
+			$itemSubtotal = $item['price'] * $item['quantity'];
+			
+			// Subtrai o valor do desconto em dinheiro do subtotal do item.
+			$itemSubtotal -= $item['discount'] * $item['quantity'];
+		
+			// Adiciona o subtotal do item ao subtotal total.
+			$subtotal += $itemSubtotal;
 		}
 		return to_currency_no_money($subtotal);
 	}
@@ -497,8 +505,13 @@ class Sale_lib
 	function get_total()
 	{
 		$total = 0;
+	
 		foreach ($this->get_cart() as $item) {
-			$total += ($item['price'] * $item['quantity'] - $item['price'] * $item['quantity'] * $item['discount'] / 100);
+			// Calcule o valor do desconto em dinheiro subtraindo o desconto diretamente do preço do item.
+			$discountAmount = $item['discount']; // Supondo que $item['discount'] represente o valor do desconto em dinheiro.
+		
+			// Adicione o preço do item com o desconto aplicado ao total.
+			$total += ($item['price'] * $item['quantity'] - $discountAmount * $item['quantity']);
 		}
 
 		foreach ($this->get_taxes() as $tax) {

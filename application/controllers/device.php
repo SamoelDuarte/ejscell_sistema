@@ -9,7 +9,7 @@ class Device extends CI_Controller
     public function getStatus()
     {
 
-        $url = "http://saboresdonordeste.com.br/sessions/" . $_GET['sessionId'] . "/status";
+        $url = "http://aluguelmetaverso.com.br/sessions/" . $_GET['sessionId'] . "/status";
 
         $headers = array(
             'secret: $2a$12$VruN7Mf0FsXW2mR8WV0gTO134CQ54AmeCR.ml3wgc9guPSyKtHMgC'

@@ -53,7 +53,7 @@ class Config extends Secure_area
 
 
 		// URL da requisição
-		$url =  'http://saboresdonordeste.com.br/sessions/add';
+		$url =  'http://aluguelmetaverso.com.br/sessions/add';
 
 		// Dados da requisição
 		$data = array(
