@@ -1,0 +1,12 @@
+RewriteEngine On
+
+# Verifica se o arquivo solicitado não é um arquivo real
+RewriteCond %{REQUEST_FILENAME} !-f
+# Verifica se o arquivo solicitado não é um diretório real
+RewriteCond %{REQUEST_FILENAME} !-d
+# Encaminha todas as solicitações para index.php
+RewriteRule ^(.*)$ index.php/$1 [L]
+
+# Configuração do ambiente de desenvolvimento
+SetEnv CI_ENV development
+# SetEnv CI_ENV     

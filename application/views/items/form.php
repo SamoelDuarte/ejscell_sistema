@@ -1,7 +1,7 @@
 <div id="required_fields_message"><?php echo $this->lang->line('common_fields_required_message'); ?></div>
 <ul id="error_message_box"></ul>
 <?php
-echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form'));
+echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form', 'enctype' => 'multipart/form-data'));
 ?>
 <fieldset id="item_basic_info">
 	<legend><?php echo $this->lang->line("items_basic_information"); ?></legend>
@@ -226,12 +226,43 @@ echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form'));
 			); ?>
 		</div>
 	</div>
+	<div id="gallery_section">
+    <legend><?php echo $this->lang->line("items_gallery"); ?></legend>
+
+    <div class="field_row clearfix">
+        <?php echo form_label('Fotos (máx 5):', 'photos', array('class' => 'required wide')); ?>
+        <div class='form_field'>
+            <input type="file" name="photos[]" id="photos" accept="image/*" multiple="multiple" onchange="previewImages();" />
+            <small>Selecione até 5 fotos. Uma delas será a capa.</small>
+        </div>
+    </div>
+
+    <div class="field_row clearfix">
+        <?php echo form_label('Selecionar Capa:', 'cover', array('class' => 'required wide')); ?>
+        <div class='form_field' id="cover_selection">
+            <?php
+            if (!empty($item_images)) {
+                foreach ($item_images as $index => $image) {
+                    $checked = ($image['is_cover']) ? 'checked' : '';
+                    echo '<label>';
+                    echo '<input type="radio" name="cover" value="' . $index . '" ' . $checked . ' />';
+                    echo '<img src="' . base_url( $image['image_path']) . '" style="max-width:100px;margin:10px;" />';
+                    echo '</label>';
+                }
+            }
+            ?>
+        </div>
+    </div>
+</div>
+
+
+
 
 	<?php
 	echo form_submit(
 		array(
-			'name' => 'submit',
-			'id' => 'submit',
+			'name' => 'submit_btn',  // Renomeado para 'submit_btn'
+			'id' => 'submit_btn',     // Renomeado para 'submit_btn'
 			'value' => $this->lang->line('common_submit'),
 			'class' => 'submit_button float_right'
 		)
@@ -242,6 +273,63 @@ echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form'));
 echo form_close();
 ?>
 <script type='text/javascript'>
+	function previewImages() {
+		var coverSelection = document.getElementById('cover_selection');
+		coverSelection.innerHTML = ''; // Limpa as opções de seleção de capa anteriores
+
+		// Obtém os arquivos selecionados
+		var files = document.getElementById('photos').files;
+
+		// Verifica se o usuário selecionou mais de 5 fotos
+		if (files.length > 5) {
+			alert('Você pode selecionar no máximo 5 fotos.');
+			return;
+		}
+
+		// Cria uma função assíncrona para ler os arquivos um por um
+		async function readFiles(index) {
+			if (index >= files.length) return; // Para quando todos os arquivos foram processados
+
+			var file = files[index];
+			var reader = new FileReader();
+
+			// Lê o arquivo como uma URL de dados (base64)
+			reader.onload = function(e) {
+				// Cria um botão de rádio para selecionar a capa
+				var radioInput = document.createElement('input');
+				radioInput.type = 'radio';
+				radioInput.name = 'cover';
+				radioInput.value = index;
+				radioInput.id = 'cover_' + index;
+
+				// Cria uma label para o botão de rádio
+				var label = document.createElement('label');
+				label.htmlFor = 'cover_' + index;
+
+				// Cria uma imagem de pré-visualização
+				var imgLabel = document.createElement('img');
+				imgLabel.src = e.target.result; // Usa o resultado da leitura
+				imgLabel.style.maxWidth = '100px'; // Define o tamanho máximo da imagem
+				imgLabel.style.margin = '10px'; // Adiciona espaço ao redor da imagem
+
+				// Adiciona o botão de rádio e a imagem na label
+				label.appendChild(radioInput);
+				label.appendChild(imgLabel);
+
+				// Adiciona a label no container
+				coverSelection.appendChild(label);
+
+				// Chama a função para o próximo arquivo
+				readFiles(index + 1);
+			};
+
+			// Lê o arquivo
+			reader.readAsDataURL(file);
+		}
+
+		// Inicia a leitura do primeiro arquivo
+		readFiles(0);
+	}
 	//validation and submit handling
 	$(document).ready(function() {
 		$("#category").autocomplete("<?php echo site_url('items/suggest_category'); ?>", {
@@ -255,10 +343,6 @@ echo form_close();
 
 		$('#item_form').validate({
 			submitHandler: function(form) {
-				/*
-				make sure the hidden field #item_number gets set
-				to the visible scan_item_number value
-				*/
 				$('#item_number').val($('#scan_item_number').val());
 				$(form).ajaxSubmit({
 					success: function(response) {
@@ -267,10 +351,10 @@ echo form_close();
 					},
 					dataType: 'json'
 				});
-
 			},
 			errorLabelContainer: "#error_message_box",
 			wrapper: "li",
+			ignore: "#photos", // Ignora o campo de upload de imagem
 			rules: {
 				name: "required",
 				category: "required",
@@ -278,7 +362,6 @@ echo form_close();
 					required: true,
 					number: true
 				},
-
 				unit_price: {
 					required: true,
 					number: true
@@ -319,8 +402,9 @@ echo form_close();
 					required: "<?php echo $this->lang->line('items_reorder_level_required'); ?>",
 					number: "<?php echo $this->lang->line('items_reorder_level_number'); ?>"
 				}
-
 			}
 		});
+
+
 	});
 </script>

@@ -8,7 +8,7 @@ $active_record = TRUE;
 
 $db['default']['hostname'] = 'localhost'; //Endereço de servidor
 $db['default']['username'] = 'root'; // usuário do banco de dados
-$db['default']['password'] = 'usbw'; //Senha do banco de dados
+$db['default']['password'] = ''; //Senha do banco de dados
 $db['default']['database'] = 'ejs'; //Banco de dados
 $db['default']['dbdriver'] = 'mysql'; //Não auterar
 $db['default']['dbprefix'] = 'ejs_'; //Não auterar
