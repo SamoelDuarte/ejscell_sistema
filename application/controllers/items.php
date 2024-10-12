@@ -155,67 +155,73 @@ class Items extends Secure_area implements iData_controller
 	}
 
 	public function save($item_id = -1)
-	{
-		$item_data = array(
-			'name' => $this->input->post('name'),
-			'garantia' => $this->input->post('garantia'),
-			'description' => $this->input->post('description'),
-			'category' => $this->input->post('category'),
-			'supplier_id' => $this->input->post('supplier_id') == '' ? null : $this->input->post('supplier_id'),
-			'item_number' => $this->input->post('item_number') == '' ? null : $this->input->post('item_number'),
-			'cost_price' => $this->input->post('cost_price'),
-			'unit_price' => $this->input->post('unit_price'),
-			'quantity' => $this->input->post('quantity'),
-			'reorder_level' => $this->input->post('reorder_level'),
-			'location' => $this->input->post('location'),
-			'allow_alt_description' => $this->input->post('allow_alt_description'),
-			'is_serialized' => $this->input->post('is_serialized')
-		);
+{
+    $item_data = array(
+        'name' => $this->input->post('name'),
+        'garantia' => $this->input->post('garantia'),
+        'description' => $this->input->post('description'),
+        'category' => $this->input->post('category'),
+        'supplier_id' => $this->input->post('supplier_id') == '' ? null : $this->input->post('supplier_id'),
+        'item_number' => $this->input->post('item_number') == '' ? null : $this->input->post('item_number'),
+        'cost_price' => $this->input->post('cost_price'),
+        'unit_price' => $this->input->post('unit_price'),
+        'quantity' => $this->input->post('quantity'),
+        'reorder_level' => $this->input->post('reorder_level'),
+        'location' => $this->input->post('location'),
+        'allow_alt_description' => $this->input->post('allow_alt_description'),
+        'is_serialized' => $this->input->post('is_serialized')
+    );
 
-		$employee_id = $this->Employee->get_logged_in_employee_info()->person_id;
-		$cur_item_info = $this->Item->get_info($item_id);
+    $employee_id = $this->Employee->get_logged_in_employee_info()->person_id;
+    $cur_item_info = $this->Item->get_info($item_id);
 
-		if ($this->Item->save($item_data, $item_id)) {
-			// Novo item
-			if ($item_id == -1) {
-				echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_adding') . ' ' . $item_data['name'], 'item_id' => $item_data['item_id']));
-				$item_id = $item_data['item_id'];
-			} else {
-				// Item já existente
-				echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_updating') . ' ' . $item_data['name'], 'item_id' => $item_id));
-			}
+    // Salvar o item
+    if ($this->Item->save($item_data, $item_id)) {
+        // Novo item
+        if ($item_id == -1) {
+            // Obtenha o item_id após inserir um novo item
+            $item_id = $this->db->insert_id();
+            echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_adding') . ' ' . $item_data['name'], 'item_id' => $item_id));
+        } else {
+            // Atualizar item existente
+            echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_updating') . ' ' . $item_data['name'], 'item_id' => $item_id));
+        }
 
-			// Registro de inventário
-			$inv_data = array(
-				'trans_date' => date('Y-m-d H:i:s'),
-				'trans_items' => $item_id,
-				'trans_user' => $employee_id,
-				'trans_comment' => $this->lang->line('items_manually_editing_of_quantity'),
-				'trans_inventory' => $cur_item_info ? $this->input->post('quantity') - $cur_item_info->quantity : $this->input->post('quantity')
-			);
-			$this->Inventory->insert($inv_data);
+        // Registro de inventário
+        $cur_quantity = isset($cur_item_info->quantity) ? (float)$cur_item_info->quantity : 0;
+        $new_quantity = (float)$this->input->post('quantity');
 
-			// Gerenciar impostos do item
-			$items_taxes_data = array();
-			$tax_names = $this->input->post('tax_names');
-			$tax_percents = $this->input->post('tax_percents');
-			for ($k = 0; $k < count($tax_percents); $k++) {
-				if (is_numeric($tax_percents[$k])) {
-					$items_taxes_data[] = array('name' => $tax_names[$k], 'percent' => $tax_percents[$k]);
-				}
-			}
-			$this->Item_taxes->save($items_taxes_data, $item_id);
+        $inv_data = array(
+            'trans_date' => date('Y-m-d H:i:s'),
+            'trans_items' => $item_id,
+            'trans_user' => $employee_id,
+            'trans_comment' => $this->lang->line('items_manually_editing_of_quantity'),
+            'trans_inventory' => $new_quantity - $cur_quantity
+        );
+        $this->Inventory->insert($inv_data);
 
-			// Gerenciar upload de imagens
-			$this->handle_images_upload($item_id);
+        // Gerenciar impostos do item
+        $items_taxes_data = array();
+        $tax_names = $this->input->post('tax_names');
+        $tax_percents = $this->input->post('tax_percents');
+        for ($k = 0; $k < count($tax_percents); $k++) {
+            if (is_numeric($tax_percents[$k])) {
+                $items_taxes_data[] = array('name' => $tax_names[$k], 'percent' => $tax_percents[$k]);
+            }
+        }
+        $this->Item_taxes->save($items_taxes_data, $item_id);
 
-			// **Integração com WooCommerce** - Enviar ou atualizar o produto no WooCommerce
-			$this->sync_with_woocommerce($item_data, $item_id);
-		} else {
-			// Falha no salvamento
-			echo json_encode(array('success' => false, 'message' => $this->lang->line('items_error_adding_updating') . ' ' . $item_data['name'], 'item_id' => -1));
-		}
-	}
+        // Gerenciar upload de imagens
+        $this->handle_images_upload($item_id);
+
+        // Integração com WooCommerce - Enviar ou atualizar o produto no WooCommerce
+        $this->sync_with_woocommerce($item_data, $item_id);
+    } else {
+        // Falha no salvamento
+        echo json_encode(array('success' => false, 'message' => $this->lang->line('items_error_adding_updating') . ' ' . $item_data['name'], 'item_id' => -1));
+    }
+}
+
 
 	private function sync_with_woocommerce($item_data, $item_id)
 	{
