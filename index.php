@@ -200,6 +200,10 @@ if (defined('ENVIRONMENT'))
  *
  */
 require_once BASEPATH.'core/CodeIgniter.php';
+// echo __DIR__ ;
+require_once __DIR__ . '/vendor/autoload.php';
+
+
 
 /* End of file index.php */
 /* Location: ./index.php */

@@ -219,16 +219,16 @@ if ( ! function_exists('get_config'))
 
 		if (isset($_config))
 		{
-			return $_config[0];
+			return $_config[0]; // Retorna a referência se já foi configurado
 		}
 
-		// Is the config file in the environment folder?
+		// Verifica se o arquivo de configuração está na pasta do ambiente
 		if ( ! defined('ENVIRONMENT') OR ! file_exists($file_path = APPPATH.'config/'.ENVIRONMENT.'/config.php'))
 		{
 			$file_path = APPPATH.'config/config.php';
 		}
 
-		// Fetch the config file
+		// Obtém o arquivo de configuração
 		if ( ! file_exists($file_path))
 		{
 			exit('The configuration file does not exist.');
@@ -236,13 +236,13 @@ if ( ! function_exists('get_config'))
 
 		require($file_path);
 
-		// Does the $config array exist in the file?
+		// Verifica se o array $config existe no arquivo
 		if ( ! isset($config) OR ! is_array($config))
 		{
 			exit('Your config file does not appear to be formatted correctly.');
 		}
 
-		// Are any values being dynamically replaced?
+		// Substitui valores dinamicamente, se necessário
 		if (count($replace) > 0)
 		{
 			foreach ($replace as $key => $val)
@@ -254,7 +254,8 @@ if ( ! function_exists('get_config'))
 			}
 		}
 
-		return $_config[0] =& $config;
+		$_config[0] = $config; // Atribui $config a $_config[0]
+		return $_config[0]; // Retorna $_config[0] por referência
 	}
 }
 
@@ -346,7 +347,7 @@ if ( ! function_exists('show_404'))
 */
 if ( ! function_exists('log_message'))
 {
-	function log_message($level = 'error', $message, $php_error = FALSE)
+	function log_message($message, $level = 'error', $php_error = FALSE)
 	{
 		static $_log;
 

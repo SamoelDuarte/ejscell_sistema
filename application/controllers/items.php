@@ -83,25 +83,25 @@ class Items extends Secure_area implements iData_controller
 	}
 
 	function view($item_id = -1)
-{
-    $data['item_info'] = $this->Item->get_info($item_id);
-    $data['item_tax_info'] = $this->Item_taxes->get_info($item_id);
-    
-    $suppliers = array('' => $this->lang->line('items_none'));
-    foreach ($this->Supplier->get_all()->result_array() as $row) {
-        $suppliers[$row['person_id']] = $row['company_name'] . ' (' . $row['first_name'] . ' ' . $row['last_name'] . ')';
-    }
-    
-    $data['suppliers'] = $suppliers;
-    $data['selected_supplier'] = $this->Item->get_info($item_id)->supplier_id;
-    $data['default_tax_1_rate'] = ($item_id == -1) ? $this->Appconfig->get('default_tax_1_rate') : '';
-    $data['default_tax_2_rate'] = ($item_id == -1) ? $this->Appconfig->get('default_tax_2_rate') : '';
+	{
+		$data['item_info'] = $this->Item->get_info($item_id);
+		$data['item_tax_info'] = $this->Item_taxes->get_info($item_id);
 
-    // Buscar as imagens relacionadas ao item
-    $data['item_images'] = $this->Item->get_item_images($item_id); // Adiciona as imagens à view
+		$suppliers = array('' => $this->lang->line('items_none'));
+		foreach ($this->Supplier->get_all()->result_array() as $row) {
+			$suppliers[$row['person_id']] = $row['company_name'] . ' (' . $row['first_name'] . ' ' . $row['last_name'] . ')';
+		}
 
-    $this->load->view("items/form", $data);
-}
+		$data['suppliers'] = $suppliers;
+		$data['selected_supplier'] = $this->Item->get_info($item_id)->supplier_id;
+		$data['default_tax_1_rate'] = ($item_id == -1) ? $this->Appconfig->get('default_tax_1_rate') : '';
+		$data['default_tax_2_rate'] = ($item_id == -1) ? $this->Appconfig->get('default_tax_2_rate') : '';
+
+		// Buscar as imagens relacionadas ao item
+		$data['item_images'] = $this->Item->get_item_images($item_id); // Adiciona as imagens à view
+
+		$this->load->view("items/form", $data);
+	}
 
 
 	//Ramel Inventory Tracking
@@ -223,9 +223,35 @@ class Items extends Secure_area implements iData_controller
 
 		$upload_path = './uploads/items/';
 
-		// Se imagens foram carregadas
+		// Se o usuário selecionou uma capa existente, remova a capa anterior
+		if ($existing_cover_id) {
+			// Remove a capa atual (definir is_cover = 0 para todas as imagens deste item)
+			$this->db->where('item_id', $item_id);
+			$this->db->update('item_images', ['is_cover' => 0]);
+
+			// Define a nova capa com base no ID da imagem existente
+			$this->db->where('image_id', $existing_cover_id);
+			$this->db->update('item_images', ['is_cover' => 1]);
+		}
+
+		// **Atualiza o is_cover se o usuário selecionou uma nova capa (sem upload de novas imagens)**
+		if ($cover_index !== null && empty($uploaded_photos['name'][0])) {
+			// Busca as imagens existentes para o item
+			$item_images = $this->Item->get_item_images($item_id);
+
+			// Remove a capa atual de todas as imagens
+			$this->db->where('item_id', $item_id);
+			$this->db->update('item_images', ['is_cover' => 0]);
+
+			// Atualiza a imagem correspondente ao índice selecionado como nova capa
+			if (isset($item_images[$cover_index])) {
+				$this->db->where('image_id', $item_images[$cover_index]['image_id']);
+				$this->db->update('item_images', ['is_cover' => 1]);
+			}
+		}
+
+		// **Se novas imagens foram carregadas**
 		if (!empty($uploaded_photos['name'][0])) {
-			// Salva as novas imagens no servidor e seus caminhos no banco de dados
 			for ($i = 0; $i < count($uploaded_photos['name']); $i++) {
 				$file_name = $uploaded_photos['name'][$i];
 				$tmp_name = $uploaded_photos['tmp_name'][$i];
@@ -235,34 +261,29 @@ class Items extends Secure_area implements iData_controller
 
 				// Salva o arquivo no servidor
 				if (move_uploaded_file($tmp_name, $upload_path . $new_file_name)) {
+					// Insere o caminho da imagem e a indicação de capa no banco de dados
 					$is_cover = ($i == $cover_index) ? 1 : 0;
 
-					// Insere o caminho da imagem e a indicação de capa no banco de dados
 					$this->db->insert('item_images', [
 						'item_id' => $item_id,
-						'image_path' => $upload_path . $new_file_name,
+						'image_path' => 'uploads/items/' . $new_file_name,
 						'is_cover' => $is_cover
 					]);
 
-					// Se esta imagem é a capa, remova o status de capa da anterior
+					// Se esta imagem foi marcada como capa, remova a capa de todas as outras
 					if ($is_cover) {
+						// Remove a capa anterior de outras imagens (aquelas com is_cover = 1)
+						$inserted_image_id = $this->db->insert_id(); // ID da imagem inserida
 						$this->db->where('item_id', $item_id);
-						$this->db->update('item_images', ['is_cover' => 0], "id != {$this->db->insert_id()}");
+						$this->db->where('image_id !=', $inserted_image_id); // Exclui a imagem recém-inserida
+						$this->db->update('item_images', ['is_cover' => 0]);
 					}
 				}
 			}
 		}
-
-		// Se o usuário selecionou uma capa existente
-		if ($existing_cover_id) {
-			$this->db->where('item_id', $item_id);
-			$this->db->update('item_images', ['is_cover' => 0]); // Remove capa atual
-
-			// Define a nova capa
-			$this->db->where('id', $existing_cover_id);
-			$this->db->update('item_images', ['is_cover' => 1]);
-		}
 	}
+
+
 
 
 	// Função para obter a mensagem de erro correspondente ao código de erro de upload

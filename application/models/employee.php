@@ -82,50 +82,54 @@ class Employee extends Person
 	/*
 	Inserts or updates an employee
 	*/
-	function save(&$person_data, &$employee_data,&$permission_data,$employee_id=false)
-	{
-		$success=false;
-		
-		//Run these queries as a transaction, we want to make sure we do all or nothing
-		$this->db->trans_start();
-			
-		if(parent::save($person_data,$employee_id))
-		{
-			if (!$employee_id or !$this->exists($employee_id))
-			{
-				$employee_data['person_id'] = $employee_id = $person_data['person_id'];
-				$success = $this->db->insert('employees',$employee_data);
-			}
-			else
-			{
-				$this->db->where('person_id', $employee_id);
-				$success = $this->db->update('employees',$employee_data);		
-			}
-			
-			//We have either inserted or updated a new employee, now lets set permissions. 
-			if($success)
-			{
-				//First lets clear out any permissions the employee currently has.
-				$success=$this->db->delete('permissions', array('person_id' => $employee_id));
-				
-				//Now insert the new permissions
-				if($success)
-				{
-					foreach($permission_data as $allowed_module)
-					{
-						$success = $this->db->insert('permissions',
-						array(
-						'module_id'=>$allowed_module,
-						'person_id'=>$employee_id));
-					}
-				}
-			}
-			
-		}
-		
-		$this->db->trans_complete();		
-		return $success;
-	}
+	function save(&$person_data, $employee_id = false, &$employee_data = null, &$permission_data = null) {
+        $success = false;
+
+        // Inicia a transação
+        $this->db->trans_start();
+
+        // Salva os dados da pessoa usando o método da classe pai
+        if (parent::save($person_data, $employee_id)) {
+            // Verifica se o funcionário não existe (inserção) ou se já existe (atualização)
+            if (!$employee_id || !$this->exists($employee_id)) {
+                // Se não existe, insere um novo funcionário
+                $employee_data['person_id'] = $person_data['person_id'];
+                $success = $this->db->insert('employees', $employee_data);
+                $employee_id = $this->db->insert_id(); // Captura o ID do novo registro
+            } else {
+                // Se já existe, atualiza o registro existente
+                $this->db->where('person_id', $employee_id);
+                $success = $this->db->update('employees', $employee_data);
+            }
+
+            // Se a inserção ou atualização foi bem-sucedida, lidamos com as permissões
+            if ($success && !empty($permission_data)) {
+                // Primeiro, limpa quaisquer permissões que o funcionário já possui
+                $this->db->delete('permissions', array('person_id' => $employee_id));
+
+                // Agora, insere as novas permissões
+                foreach ($permission_data as $allowed_module) {
+                    // Insere as permissões e verifica o sucesso
+                    $insert_success = $this->db->insert('permissions', array(
+                        'module_id' => $allowed_module,
+                        'person_id' => $employee_id
+                    ));
+
+                    // Se uma inserção falhar, não precisamos continuar
+                    if (!$insert_success) {
+                        $success = false; // A operação não foi bem-sucedida
+                        break; // Para sair do loop
+                    }
+                }
+            }
+        }
+
+        // Completa a transação
+        $this->db->trans_complete();
+
+        // Retorna o sucesso da operação
+        return $success;
+    }
 	
 	/*
 	Deletes one employee

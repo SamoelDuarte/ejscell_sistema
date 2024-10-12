@@ -102,71 +102,64 @@ class Customer extends Person
 	/*
 	Inserts or updates a customer
 	*/
-	function save(&$person_data, &$customer_data, $customer_id = false, $categories = null)
-	{
-		$success = false;
-		//Run these queries as a transaction, we want to make sure we do all or nothing
-		$this->db->trans_start();
+	public function save(&$person_data, $customer_id = false, $categories = null) {
+        $success = false;
 
-	
-		if (parent::save($person_data, $customer_id)) {
-			// ... Se a operação em people (ou customers) for bem-sucedida ...
+        // Inicia a transação
+        $this->db->trans_start();
 
+        // Salva os dados da pessoa
+        if (parent::save($person_data, $customer_id)) {
+            // Se a operação em 'people' for bem-sucedida
+            if (!$customer_id || !$this->exists($customer_id)) {
+                $customer_data['person_id'] = $person_data['person_id'];
+                $success = $this->db->insert('customers', $customer_data);
+                
+                // Agora, inserir dados em 'customer_category_link' se $categories não for nulo
+                if ($success && !is_null($categories) && !empty($categories)) {
+                    foreach ($categories as $categoria) {
+                        $category_data = array(
+                            'person_id' => $customer_data['person_id'],
+                            'category_name' => $categoria
+                        );
 
-			if (!$customer_id or !$this->exists($customer_id)) {
+                        $this->db->insert('customer_category_link', $category_data);
+                    }
+                }
+            } else {
+                // Se $customer_id existir, atualize o registro existente em 'customers'
+                $this->db->where('person_id', $customer_id);
+                $customer_data['person_id'] = $customer_id;
+                $success_customers = $this->db->update('customers', $customer_data);
 
+                // Agora, remover dados existentes em 'customer_category_link' para a pessoa
+                if ($success_customers) {
+                    $this->db->where('person_id', $customer_data['person_id']);
+                    $this->db->delete('customer_category_link');
 
-			
-				$customer_data['person_id'] = $person_data['person_id'];
-				$success = $this->db->insert('customers', $customer_data);
-				
-				// Agora, inserir dados em 'customer_category_link' usando $arrayCategorias
-				if ($success) {
-					foreach ($categories as $categoria) {
-						$category_data = array(
-							'person_id' => $customer_data['person_id'],
-							'category_name' => $categoria
-						);
+                    // Inserir novos dados em 'customer_category_link' se $categories não for nulo
+                    if (!is_null($categories) && !empty($categories)) {
+                        foreach ($categories as $categoria) {
+                            $category_data = array(
+                                'person_id' => $customer_data['person_id'],
+                                'category_name' => $categoria
+                            );
 
-						$this->db->insert('customer_category_link', $category_data);
-					}
-				}
+                            $this->db->insert('customer_category_link', $category_data);
+                        }
+                    }
+                }
 
-			
-			} else {
-				// Se $customer_id existir, atualize o registro existente em 'customers'
-				$this->db->where('person_id', $customer_id);
-				$customer_data['person_id'] = $customer_id;
-				$success_customers = $this->db->update('customers', $customer_data);
+                $success = $success_customers;
+            }
+        }
 
-				// Agora, remover dados existentes em 'customer_category_link' para a pessoa
-				if ($success_customers) {
-					$this->db->where('person_id', $customer_data['person_id']);
-					$this->db->delete('customer_category_link');
+        // Completa a transação
+        $this->db->trans_complete();
 
-					// Inserir novos dados em 'customer_category_link' usando $arrayCategorias
-					foreach ($categories as $categoria) {
-						$category_data = array(
-							'person_id' => $customer_data['person_id'],
-							'category_name' => $categoria
-						);
-
-						$this->db->insert('customer_category_link', $category_data);
-					}
-				}
-
-				$success = $success_customers;
-			}
-
-			
-		} 
-
-
-
-
-		$this->db->trans_complete();
-		return $success;
-	}
+        // Retorna o sucesso da operação
+        return $success;
+    }
 
 	/*
 	Deletes one customer

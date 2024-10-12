@@ -143,16 +143,18 @@ class CI_Loader {
 	 * @return 	object
 	 */
 	public function initialize()
-	{
-		$this->_ci_classes = array();
-		$this->_ci_loaded_files = array();
-		$this->_ci_models = array();
-		$this->_base_classes =& is_loaded();
+{
+    $this->_ci_classes = array();
+    $this->_ci_loaded_files = array();
+    $this->_ci_models = array();
+    
+    // Remover o operador de referência & da atribuição
+    $this->_base_classes = is_loaded(); // Corrigido
 
-		$this->_ci_autoloader();
+    $this->_ci_autoloader();
 
-		return $this;
-	}
+    return $this;
+}
 
 	// --------------------------------------------------------------------
 

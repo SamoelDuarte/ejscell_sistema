@@ -1,6 +1,9 @@
 <?php
 require_once("secure_area.php");
 require_once("Utils.php");
+require_once __DIR__ . '/../../vendor/autoload.php';
+use Automattic\WooCommerce\Client;
+
 class Config extends Secure_area
 {
 	function __construct()
@@ -9,9 +12,31 @@ class Config extends Secure_area
 		$this->load->model('device_model');
 	}
 
+	public function test()
+{
+    $consumerKey = 'ck_603a434c3272267564db921fe6fa1172aa61936e';
+    $consumerSecret = 'cs_6523bd164de91f33b6f2b9fcc53611edeef68b14';
+    $baseUrl = 'https://ejscell.com.br/wp-json/wc/v3';
+
+  
+
+	$woocommerce = new Client(
+		'https://ejscell.com.br',
+		'ck_603a434c3272267564db921fe6fa1172aa61936e',
+		'cs_6523bd164de91f33b6f2b9fcc53611edeef68b14',
+		[
+		  'version' => 'wc/v3',
+		]
+	  );
+	  $results = $woocommerce->get('products');
+	  print_r($results);
+}
+
+
+
 	public function index()
 	{
-	
+
 
 		$issession = $this->device_model->getSession();
 
@@ -34,7 +59,7 @@ class Config extends Secure_area
 				"session" => $session,
 				"device" => $id
 			);
-		} else{
+		} else {
 			$send = array(
 				"qrcodeImgSrc" => '',
 				"session" => '',

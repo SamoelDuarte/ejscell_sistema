@@ -227,33 +227,35 @@ echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form', '
 		</div>
 	</div>
 	<div id="gallery_section">
-    <legend><?php echo $this->lang->line("items_gallery"); ?></legend>
+		<legend><?php echo $this->lang->line("items_gallery"); ?></legend>
 
-    <div class="field_row clearfix">
-        <?php echo form_label('Fotos (máx 5):', 'photos', array('class' => 'required wide')); ?>
-        <div class='form_field'>
-            <input type="file" name="photos[]" id="photos" accept="image/*" multiple="multiple" onchange="previewImages();" />
-            <small>Selecione até 5 fotos. Uma delas será a capa.</small>
-        </div>
-    </div>
+		<div class="field_row clearfix">
+			<?php echo form_label('Fotos (máx 5):', 'photos', array('class' => 'required wide')); ?>
+			<div class='form_field'>
+				<input type="file" name="photos[]" id="photos" accept="image/*" multiple="multiple" onchange="previewImages();" />
+				<small>Selecione até 5 fotos. Uma delas será a capa.</small>
+			</div>
+		</div>
 
-    <div class="field_row clearfix">
-        <?php echo form_label('Selecionar Capa:', 'cover', array('class' => 'required wide')); ?>
-        <div class='form_field' id="cover_selection">
-            <?php
-            if (!empty($item_images)) {
-                foreach ($item_images as $index => $image) {
-                    $checked = ($image['is_cover']) ? 'checked' : '';
-                    echo '<label>';
-                    echo '<input type="radio" name="cover" value="' . $index . '" ' . $checked . ' />';
-                    echo '<img src="' . base_url( $image['image_path']) . '" style="max-width:100px;margin:10px;" />';
-                    echo '</label>';
-                }
-            }
-            ?>
-        </div>
-    </div>
-</div>
+		<div class="field_row clearfix">
+			<?php echo form_label('Selecionar Capa:', 'cover', array('class' => 'required wide')); ?>
+			<div class='form_field' id="cover_selection">
+				<?php
+				if (!empty($item_images)) {
+					foreach ($item_images as $index => $image) {
+						// Verifica se essa imagem é a capa
+						$checked = ($image['is_cover'] == 1) ? 'checked' : '';
+
+						echo '<label>';
+						echo '<input type="radio" name="cover" value="' . $index . '" ' . $checked . ' />';
+						echo '<img src="' . base_url($image['image_path']) . '" style="max-width:100px;margin:10px;" />';
+						echo '</label>';
+					}
+				}
+				?>
+			</div>
+		</div>
+	</div>
 
 
 

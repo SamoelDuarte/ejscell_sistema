@@ -101,71 +101,56 @@ if ( ! function_exists('ol'))
  * @param	integer
  * @return	string
  */
-if ( ! function_exists('_list'))
-{
-	function _list($type = 'ul', $list, $attributes = '', $depth = 0)
-	{
-		// If an array wasn't submitted there's nothing to do...
-		if ( ! is_array($list))
-		{
-			return $list;
-		}
+if (!function_exists('_list')) {
+    function _list($list, $type = 'ul', $attributes = '', $depth = 0) {
+        // If an array wasn't submitted there's nothing to do...
+        if (!is_array($list)) {
+            return ''; // Retornar uma string vazia se não for um array
+        }
 
-		// Set the indentation based on the depth
-		$out = str_repeat(" ", $depth);
+        // Set the indentation based on the depth
+        $out = str_repeat(" ", $depth);
 
-		// Were any attributes submitted?  If so generate a string
-		if (is_array($attributes))
-		{
-			$atts = '';
-			foreach ($attributes as $key => $val)
-			{
-				$atts .= ' ' . $key . '="' . $val . '"';
-			}
-			$attributes = $atts;
-		}
-		elseif (is_string($attributes) AND strlen($attributes) > 0)
-		{
-			$attributes = ' '. $attributes;
-		}
+        // Generate attributes if they are provided as an array
+        if (is_array($attributes)) {
+            $atts = '';
+            foreach ($attributes as $key => $val) {
+                $atts .= ' ' . htmlspecialchars($key) . '="' . htmlspecialchars($val) . '"';
+            }
+            $attributes = $atts;
+        } elseif (is_string($attributes) && strlen($attributes) > 0) {
+            $attributes = ' ' . htmlspecialchars($attributes);
+        }
 
-		// Write the opening list tag
-		$out .= "<".$type.$attributes.">\n";
+        // Write the opening list tag
+        $out .= "<" . $type . $attributes . ">\n";
 
-		// Cycle through the list elements.  If an array is
-		// encountered we will recursively call _list()
+        // Cycle through the list elements. If an array is encountered we will recursively call _list()
+        foreach ($list as $key => $val) {
+            $out .= str_repeat(" ", $depth + 2);
+            $out .= "<li>";
 
-		static $_last_list_item = '';
-		foreach ($list as $key => $val)
-		{
-			$_last_list_item = $key;
+            if (!is_array($val)) {
+                $out .= htmlspecialchars($val);
+            } else {
+                $out .= htmlspecialchars($key) . "\n";
+                $out .= _list($val, $type, '', $depth + 4); // Chamada recursiva
+                $out .= str_repeat(" ", $depth + 2);
+            }
 
-			$out .= str_repeat(" ", $depth + 2);
-			$out .= "<li>";
+            $out .= "</li>\n";
+        }
 
-			if ( ! is_array($val))
-			{
-				$out .= $val;
-			}
-			else
-			{
-				$out .= $_last_list_item."\n";
-				$out .= _list($type, $val, '', $depth + 4);
-				$out .= str_repeat(" ", $depth + 2);
-			}
+        // Set the indentation for the closing tag
+        $out .= str_repeat(" ", $depth);
 
-			$out .= "</li>\n";
-		}
+        // Write the closing list tag
+        $out .= "</" . $type . ">\n";
 
-		// Set the indentation for the closing tag
-		$out .= str_repeat(" ", $depth);
-
-		// Write the closing list tag
-		$out .= "</".$type.">\n";
-
-		return $out;
-	}
+        return $out;
+    }
 }
+
 
 // ------------------------------------------------------------------------
 

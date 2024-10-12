@@ -42,22 +42,26 @@ class Item extends CI_Model
 		return $this->db->count_all_results();
 	}
 
-	function get_all_filtered($low_inventory = 0, $is_serialized = 0, $no_description)
-	{
+	function get_all_filtered($no_description, $low_inventory = 0, $is_serialized = 0) {
 		$this->db->from('items');
+	
 		if ($low_inventory != 0) {
 			$this->db->where('quantity <=', 'reorder_level', false);
 		}
+	
 		if ($is_serialized != 0) {
 			$this->db->where('is_serialized', 1);
 		}
+	
 		if ($no_description != 0) {
 			$this->db->where('description', '');
 		}
+	
 		$this->db->where('deleted', 0);
 		$this->db->order_by("name", "asc");
 		return $this->db->get();
 	}
+	
 
 	/*
 	Gets information about a particular item
