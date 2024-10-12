@@ -280,8 +280,8 @@ class Items extends Secure_area implements iData_controller
 		// Organiza as imagens, separando a capa
 		foreach ($query->result() as $row) {
 			$image = [
-				// 'src' => base_url($row->image_path) // Converte o caminho relativo para um URL absoluto
-				'src' => 'https://images.pexels.com/photos/322207/pexels-photo-322207.jpeg?auto=compress&cs=tinysrgb&w=600' // Converte o caminho relativo para um URL absoluto
+				'src' => base_url($row->image_path) // Converte o caminho relativo para um URL absoluto
+				// 'src' => 'https://images.pexels.com/photos/322207/pexels-photo-322207.jpeg?auto=compress&cs=tinysrgb&w=600' // Converte o caminho relativo para um URL absoluto
 			];
 
 			// Verifica se é a capa (is_cover = 1)
