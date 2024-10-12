@@ -52,6 +52,7 @@ $lang['items_cost_price_number']='Preço de custo deve ser um número';
 $lang['items_quantity_number']='Quantidade deve ser um número';
 $lang['items_reorder_level_number']='Nivel de reposição deve ser um número';
 $lang['items_none'] = 'Vazio';
+$lang['items_tax_percent_number'] = 'Porcentagem do imposto';
 $lang['items_supplier'] = 'Fornecedor';
 $lang['items_generate_barcodes'] = 'Gerar Cód. de Barras';
 $lang['items_must_select_item_for_barcode'] = 'Selecione ao menos 1 produto para gerar o cód. de barras';

@@ -25,6 +25,7 @@ $lang['common_remove']='Remover';
 $lang['common_view_recent_sales']='Vendas Recentes';
 $lang['common_you_are_using_phppos']='Você está usando o Sistema EJS_CELL versão';
 $lang['common_please_visit_my']='Feito por';
+$lang['common_you_are_using_ospos'] = 'Você está usando OSPOS';
 $lang['common_website']='Beta Solução';
 $lang['common_fields_required_message']='Os campos em vermelho são obrigatórios';
 $lang['common_learn_about_project']=' para EJS_CELL';

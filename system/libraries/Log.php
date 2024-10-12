@@ -69,43 +69,44 @@ class CI_Log {
 	 * @param	bool	whether the error is a native PHP error
 	 * @return	bool
 	 */
-	public function write_log($level = 'error', $msg, $php_error = FALSE)
-	{
-		if ($this->_enabled === FALSE)
-		{
-			return FALSE;
-		}
+	public function write_log($msg, $level = 'error', $php_error = FALSE)
+{
+    if ($this->_enabled === FALSE)
+    {
+        return FALSE;
+    }
 
-		$level = strtoupper($level);
+    $level = strtoupper($level);
 
-		if ( ! isset($this->_levels[$level]) OR ($this->_levels[$level] > $this->_threshold))
-		{
-			return FALSE;
-		}
+    if ( ! isset($this->_levels[$level]) OR ($this->_levels[$level] > $this->_threshold))
+    {
+        return FALSE;
+    }
 
-		$filepath = $this->_log_path.'log-'.date('Y-m-d').'.php';
-		$message  = '';
+    $filepath = $this->_log_path.'log-'.date('Y-m-d').'.php';
+    $message  = '';
 
-		if ( ! file_exists($filepath))
-		{
-			$message .= "<"."?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed'); ?".">\n\n";
-		}
+    if ( ! file_exists($filepath))
+    {
+        $message .= "<"."?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed'); ?".">\n\n";
+    }
 
-		if ( ! $fp = @fopen($filepath, FOPEN_WRITE_CREATE))
-		{
-			return FALSE;
-		}
+    if ( ! $fp = @fopen($filepath, FOPEN_WRITE_CREATE))
+    {
+        return FALSE;
+    }
 
-		$message .= $level.' '.(($level == 'INFO') ? ' -' : '-').' '.date($this->_date_fmt). ' --> '.$msg."\n";
+    $message .= $level.' '.(($level == 'INFO') ? ' -' : '-').' '.date($this->_date_fmt). ' --> '.$msg."\n";
 
-		flock($fp, LOCK_EX);
-		fwrite($fp, $message);
-		flock($fp, LOCK_UN);
-		fclose($fp);
+    flock($fp, LOCK_EX);
+    fwrite($fp, $message);
+    flock($fp, LOCK_UN);
+    fclose($fp);
 
-		@chmod($filepath, FILE_WRITE_MODE);
-		return TRUE;
-	}
+    @chmod($filepath, FILE_WRITE_MODE);
+    return TRUE;
+}
+
 
 }
 // END Log Class

@@ -154,7 +154,7 @@ class Items extends Secure_area implements iData_controller
 		$this->load->view("items/form_bulk", $data);
 	}
 
-	function save($item_id = -1)
+	public function save($item_id = -1)
 	{
 		$item_data = array(
 			'name' => $this->input->post('name'),
@@ -172,17 +172,16 @@ class Items extends Secure_area implements iData_controller
 			'is_serialized' => $this->input->post('is_serialized')
 		);
 
-
-
 		$employee_id = $this->Employee->get_logged_in_employee_info()->person_id;
 		$cur_item_info = $this->Item->get_info($item_id);
 
 		if ($this->Item->save($item_data, $item_id)) {
-			// New item
+			// Novo item
 			if ($item_id == -1) {
 				echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_adding') . ' ' . $item_data['name'], 'item_id' => $item_data['item_id']));
 				$item_id = $item_data['item_id'];
-			} else { // Previous item
+			} else {
+				// Item já existente
 				echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_updating') . ' ' . $item_data['name'], 'item_id' => $item_id));
 			}
 
@@ -209,10 +208,94 @@ class Items extends Secure_area implements iData_controller
 
 			// Gerenciar upload de imagens
 			$this->handle_images_upload($item_id);
-		} else { // Failure
+
+			// **Integração com WooCommerce** - Enviar ou atualizar o produto no WooCommerce
+			$this->sync_with_woocommerce($item_data, $item_id);
+		} else {
+			// Falha no salvamento
 			echo json_encode(array('success' => false, 'message' => $this->lang->line('items_error_adding_updating') . ' ' . $item_data['name'], 'item_id' => -1));
 		}
 	}
+
+	private function sync_with_woocommerce($item_data, $item_id)
+	{
+		// Carregar a biblioteca WooCommerce
+		$this->load->library('WooCommerce');
+
+		// Preparar os dados para enviar ao WooCommerce
+		$woo_data = array(
+			'name' => $item_data['name'],
+			'regular_price' => (string)$item_data['unit_price'], // Preço em string conforme a API do WooCommerce requer
+			'description' => $item_data['description'],
+			'sku' => $item_data['item_number'],
+			'stock_quantity' => (int)$item_data['quantity'],
+			'manage_stock' => true,
+			'status' => 'publish',  // Publicar o produto diretamente
+		);
+
+		// Obter imagens do item
+		$images = $this->get_item_images($item_id);
+		if (!empty($images)) {
+			$woo_data['images'] = $images;
+		}
+
+		try {
+			// Se for um novo item
+			if ($item_id == -1) {
+				$response = $this->woocommerce->create_product($woo_data);
+			} else {
+				// Atualizar o produto no WooCommerce usando SKU
+				$response = $this->woocommerce->get_products(array('sku' => $item_data['item_number']));
+				if (!empty($response)) {
+					$product_id = $response[0]->id;
+					$this->woocommerce->update_product($product_id, $woo_data);
+				} else {
+					// Caso o produto não exista, criar um novo
+					$this->woocommerce->create_product($woo_data);
+				}
+			}
+		} catch (Exception $e) {
+			log_message('error', 'Erro ao sincronizar o item com o WooCommerce: ' . $e->getMessage());
+		}
+	}
+
+	
+	private function get_item_images($item_id)
+	{
+		// Seleciona as imagens do banco de dados
+		$this->db->select('image_path, is_cover');
+		$this->db->from('item_images');
+		$this->db->where('item_id', $item_id);
+		$query = $this->db->get();
+
+		$images = [];
+		$cover_image = null;
+
+		// Organiza as imagens, separando a capa
+		foreach ($query->result() as $row) {
+			$image = [
+				// 'src' => base_url($row->image_path) // Converte o caminho relativo para um URL absoluto
+				'src' => 'https://images.pexels.com/photos/322207/pexels-photo-322207.jpeg?auto=compress&cs=tinysrgb&w=600' // Converte o caminho relativo para um URL absoluto
+			];
+
+			// Verifica se é a capa (is_cover = 1)
+			if ($row->is_cover == 1) {
+				$cover_image = $image;
+			} else {
+				$images[] = $image;
+			}
+		}
+
+		// Coloca a imagem de capa como a primeira no array de imagens
+		if ($cover_image) {
+			array_unshift($images, $cover_image);
+		}
+
+		return $images;
+	}
+
+
+
 
 	private function handle_images_upload($item_id)
 	{

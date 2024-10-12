@@ -227,7 +227,7 @@ echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form', '
 		</div>
 	</div>
 	<div id="gallery_section">
-		<legend><?php echo $this->lang->line("items_gallery"); ?></legend>
+		<legend>Galeria</legend>
 
 		<div class="field_row clearfix">
 			<?php echo form_label('Fotos (máx 5):', 'photos', array('class' => 'required wide')); ?>

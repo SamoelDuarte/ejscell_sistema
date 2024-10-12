@@ -614,48 +614,56 @@ if ( ! function_exists('form_close'))
  */
 if ( ! function_exists('form_prep'))
 {
-	function form_prep($str = '', $field_name = '')
-	{
-		static $prepped_fields = array();
+    function form_prep($str = '', $field_name = '')
+    {
+        static $prepped_fields = array();
 
-		// if the field name is an array we do this recursively
-		if (is_array($str))
-		{
-			foreach ($str as $key => $val)
-			{
-				$str[$key] = form_prep($val);
-			}
+        // If the field name is an array, we do this recursively
+        if (is_array($str))
+        {
+            foreach ($str as $key => $val)
+            {
+                $str[$key] = form_prep($val);
+            }
 
-			return $str;
-		}
+            return $str;
+        }
 
-		if ($str === '')
-		{
-			return '';
-		}
+        // Check if $str is null and convert to an empty string
+        if ($str === null)
+        {
+            return '';
+        }
 
-		// we've already prepped a field with this name
-		// @todo need to figure out a way to namespace this so
-		// that we know the *exact* field and not just one with
-		// the same name
-		if (isset($prepped_fields[$field_name]))
-		{
-			return $str;
-		}
+        if ($str === '')
+        {
+            return '';
+        }
 
-		$str = htmlspecialchars($str);
+        // We've already prepped a field with this name
+        // @todo need to figure out a way to namespace this so
+        // that we know the *exact* field and not just one with
+        // the same name
+        if (isset($prepped_fields[$field_name]))
+        {
+            return $str;
+        }
 
-		// In case htmlspecialchars misses these.
-		$str = str_replace(array("'", '"'), array("&#39;", "&quot;"), $str);
+        // Use htmlspecialchars() on the string
+        $str = htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
 
-		if ($field_name != '')
-		{
-			$prepped_fields[$field_name] = $field_name;
-		}
+        // In case htmlspecialchars misses these.
+        $str = str_replace(array("'", '"'), array("&#39;", "&quot;"), $str);
 
-		return $str;
-	}
+        if ($field_name != '')
+        {
+            $prepped_fields[$field_name] = $field_name;
+        }
+
+        return $str;
+    }
 }
+
 
 // ------------------------------------------------------------------------
 

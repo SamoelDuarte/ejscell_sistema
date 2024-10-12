@@ -1,7 +1,8 @@
 <?php
 require_once("secure_area.php");
 require_once("Utils.php");
-require_once __DIR__ . '/../../vendor/autoload.php';
+
+
 use Automattic\WooCommerce\Client;
 
 class Config extends Secure_area
@@ -13,26 +14,14 @@ class Config extends Secure_area
 	}
 
 	public function test()
-{
-    $consumerKey = 'ck_603a434c3272267564db921fe6fa1172aa61936e';
-    $consumerSecret = 'cs_6523bd164de91f33b6f2b9fcc53611edeef68b14';
-    $baseUrl = 'https://ejscell.com.br/wp-json/wc/v3';
+	{
+		$this->load->library('WooCommerce');
 
-  
+		$products = $this->woocommerce->get_products();
 
-	$woocommerce = new Client(
-		'https://ejscell.com.br',
-		'ck_603a434c3272267564db921fe6fa1172aa61936e',
-		'cs_6523bd164de91f33b6f2b9fcc53611edeef68b14',
-		[
-		  'version' => 'wc/v3',
-		]
-	  );
-	  $results = $woocommerce->get('products');
-	  print_r($results);
-}
-
-
+        // Exibir os produtos
+        print_r($products);
+	}
 
 	public function index()
 	{

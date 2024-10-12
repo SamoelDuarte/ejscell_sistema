@@ -42,26 +42,27 @@ class Item extends CI_Model
 		return $this->db->count_all_results();
 	}
 
-	function get_all_filtered($no_description, $low_inventory = 0, $is_serialized = 0) {
+	function get_all_filtered($no_description, $low_inventory = 0, $is_serialized = 0)
+	{
 		$this->db->from('items');
-	
+
 		if ($low_inventory != 0) {
 			$this->db->where('quantity <=', 'reorder_level', false);
 		}
-	
+
 		if ($is_serialized != 0) {
 			$this->db->where('is_serialized', 1);
 		}
-	
+
 		if ($no_description != 0) {
 			$this->db->where('description', '');
 		}
-	
+
 		$this->db->where('deleted', 0);
 		$this->db->order_by("name", "asc");
 		return $this->db->get();
 	}
-	
+
 
 	/*
 	Gets information about a particular item
@@ -215,6 +216,7 @@ class Item extends CI_Model
 	{
 		$suggestions = array();
 
+		// Busca por nome
 		$this->db->from('items');
 		$this->db->like('name', $search);
 		$this->db->where('deleted', 0);
@@ -224,6 +226,7 @@ class Item extends CI_Model
 			$suggestions[] = $row->name;
 		}
 
+		// Busca por categoria
 		$this->db->select('category');
 		$this->db->from('items');
 		$this->db->where('deleted', 0);
@@ -235,6 +238,7 @@ class Item extends CI_Model
 			$suggestions[] = $row->category;
 		}
 
+		// Busca por número do item
 		$this->db->from('items');
 		$this->db->like('item_number', $search);
 		$this->db->where('deleted', 0);
@@ -244,13 +248,14 @@ class Item extends CI_Model
 			$suggestions[] = $row->item_number;
 		}
 
-
-		//only return $limit suggestions
-		if (count($suggestions > $limit)) {
+		// Limitar sugestões ao valor de $limit
+		if (count($suggestions) > $limit) {
 			$suggestions = array_slice($suggestions, 0, $limit);
 		}
+
 		return $suggestions;
 	}
+
 
 	function get_item_search_suggestions($search, $limit = 25)
 	{

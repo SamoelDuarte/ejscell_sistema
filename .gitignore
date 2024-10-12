@@ -1,3 +1,35 @@
-application/logs/*.php
+# Ignorar configurações sensíveis do CodeIgniter 3
+application/config/config.php
+application/config/database.php
+
+# Se tiver outros arquivos de configuração sensíveis
 application/config/*.php
+
+# Ignorar as pastas de cache e logs (opcional)
+application/cache/
+application/logs/
+
+# Ignorar uploads
 uploads/
+
+# Ignorar arquivos temporários
+*.tmp
+*.log
+
+# Ignorar arquivos gerados pelo sistema
+.DS_Store
+Thumbs.db
+.idea/          # Ignora as configurações de IDE (ex.: PhpStorm)
+*.bak
+*.swp
+
+# Ignorar dependências do Composer (se aplicável)
+vendor/
+
+# Ignorar arquivos de cache do CodeIgniter (opcional)
+application/cache/*
+
+# Ignorar arquivos gerados pela ferramenta de criação do CodeIgniter
+.well-known/
+build/
+composer.lock
