@@ -6,6 +6,10 @@ class Items extends Secure_area implements iData_controller
 	function __construct()
 	{
 		parent::__construct('items');
+		// Carregue a biblioteca
+		$this->load->library('woocommercelibrary');
+		// Atribua a instância à propriedade
+		$this->wooCommerceLibrary = new WooCommerceLibrary();
 	}
 
 	function index()
@@ -155,89 +159,128 @@ class Items extends Secure_area implements iData_controller
 	}
 
 	public function save($item_id = -1)
-{
-    $item_data = array(
-        'name' => $this->input->post('name'),
-        'garantia' => $this->input->post('garantia'),
-        'description' => $this->input->post('description'),
-        'category' => $this->input->post('category'),
-        'supplier_id' => $this->input->post('supplier_id') == '' ? null : $this->input->post('supplier_id'),
-        'item_number' => $this->input->post('item_number') == '' ? null : $this->input->post('item_number'),
-        'cost_price' => $this->input->post('cost_price'),
-        'unit_price' => $this->input->post('unit_price'),
-        'quantity' => $this->input->post('quantity'),
-        'reorder_level' => $this->input->post('reorder_level'),
-        'location' => $this->input->post('location'),
-        'allow_alt_description' => $this->input->post('allow_alt_description'),
-        'is_serialized' => $this->input->post('is_serialized')
-    );
+	{
+		$this->load->model('categorie');
+		$category = $this->categorie->get_by_name($this->input->post('category'));
+		if ($category) {
+			$id_category = $category->category_id;
+		} else {
+			$id_category = $this->categorie->insert(['category_name' => $this->input->post('category')]);
+			$category = $this->categorie->get_by_name($this->input->post('category'));
 
-    $employee_id = $this->Employee->get_logged_in_employee_info()->person_id;
-    $cur_item_info = $this->Item->get_info($item_id);
-
-    // Salvar o item
-    if ($this->Item->save($item_data, $item_id)) {
-        // Novo item
-        if ($item_id == -1) {
-            // Obtenha o item_id após inserir um novo item
-            $item_id = $this->db->insert_id();
-            echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_adding') . ' ' . $item_data['name'], 'item_id' => $item_id));
-        } else {
-            // Atualizar item existente
-            echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_updating') . ' ' . $item_data['name'], 'item_id' => $item_id));
-        }
-
-        // Registro de inventário
-        $cur_quantity = isset($cur_item_info->quantity) ? (float)$cur_item_info->quantity : 0;
-        $new_quantity = (float)$this->input->post('quantity');
-
-        $inv_data = array(
-            'trans_date' => date('Y-m-d H:i:s'),
-            'trans_items' => $item_id,
-            'trans_user' => $employee_id,
-            'trans_comment' => $this->lang->line('items_manually_editing_of_quantity'),
-            'trans_inventory' => $new_quantity - $cur_quantity
-        );
-        $this->Inventory->insert($inv_data);
-
-        // Gerenciar impostos do item
-        $items_taxes_data = array();
-        $tax_names = $this->input->post('tax_names');
-        $tax_percents = $this->input->post('tax_percents');
-        for ($k = 0; $k < count($tax_percents); $k++) {
-            if (is_numeric($tax_percents[$k])) {
-                $items_taxes_data[] = array('name' => $tax_names[$k], 'percent' => $tax_percents[$k]);
-            }
-        }
-        $this->Item_taxes->save($items_taxes_data, $item_id);
-
-        // Gerenciar upload de imagens
-        $this->handle_images_upload($item_id);
-
-        // Integração com WooCommerce - Enviar ou atualizar o produto no WooCommerce
-        $this->sync_with_woocommerce($item_data, $item_id);
-    } else {
-        // Falha no salvamento
-        echo json_encode(array('success' => false, 'message' => $this->lang->line('items_error_adding_updating') . ' ' . $item_data['name'], 'item_id' => -1));
-    }
-}
+			try {
+				$data = [
+					'name' => $category->category_name,
+				];
+				$result = 	$this->woocommercelibrary->create_product_category($data); // Chama a função da biblioteca para criar a categoria
+				// sleep(6);
+				// Agora, vamos atualizar a tabela local com o ID
+				$update_data = [
+					'wc_id' => $result->id,  // Armazena o ID retornado do WooCommerce
+					'category_id' => $category->category_id,  // Outros dados que você pode querer atualizar
+				];
+				$this->categorie->update($category->category_id,$update_data);
+			} catch (Exception $e) {
+				log_message('error', 'Erro ao criar categoria no WooCommerce: ' . $e->getMessage());
+			}
+		}
+		$item_data = array(
+			'name' => $this->input->post('name'),
+			'garantia' => $this->input->post('garantia'),
+			'description' => $this->input->post('description'),
+			'category_id' => $id_category,
+			'supplier_id' => $this->input->post('supplier_id') == '' ? null : $this->input->post('supplier_id'),
+			'item_number' => $this->input->post('item_number') == '' ? null : $this->input->post('item_number'),
+			'cost_price' => $this->input->post('cost_price'),
+			'unit_price' => $this->input->post('unit_price'),
+			'quantity' => $this->input->post('quantity'),
+			'reorder_level' => $this->input->post('reorder_level'),
+			'location' => $this->input->post('location'),
+			'allow_alt_description' => $this->input->post('allow_alt_description'),
+			'is_serialized' => $this->input->post('is_serialized'),
+			'sale_price' => $this->input->post('sale_price') == '' ? null : $this->input->post('sale_price'),
+			'on_sale' => $this->input->post('on_sale') == '1' ? 1 : 0, // Checkbox para indicar promoção
+			'featured' => $this->input->post('featured') == '1' ? 1 : 0  // Checkbox para indicar destaque
+		);
 
 
+		$employee_id = $this->Employee->get_logged_in_employee_info()->person_id;
+		$cur_item_info = $this->Item->get_info($item_id);
+
+		// Salvar o item
+		if ($this->Item->save($item_data, $item_id)) {
+			// Novo item
+			if ($item_id == -1) {
+				// Obtenha o item_id após inserir um novo item
+				$item_id = $this->db->insert_id();
+				echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_adding') . ' ' . $item_data['name'], 'item_id' => $item_id));
+			} else {
+				// Atualizar item existente
+				echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_updating') . ' ' . $item_data['name'], 'item_id' => $item_id));
+			}
+
+			// Registro de inventário
+			$cur_quantity = isset($cur_item_info->quantity) ? (float)$cur_item_info->quantity : 0;
+			$new_quantity = (float)$this->input->post('quantity');
+
+			$inv_data = array(
+				'trans_date' => date('Y-m-d H:i:s'),
+				'trans_items' => $item_id,
+				'trans_user' => $employee_id,
+				'trans_comment' => $this->lang->line('items_manually_editing_of_quantity'),
+				'trans_inventory' => $new_quantity - $cur_quantity
+			);
+			$this->Inventory->insert($inv_data);
+
+			// Gerenciar impostos do item
+			$items_taxes_data = array();
+			$tax_names = $this->input->post('tax_names');
+			$tax_percents = $this->input->post('tax_percents');
+			for ($k = 0; $k < count($tax_percents); $k++) {
+				if (is_numeric($tax_percents[$k])) {
+					$items_taxes_data[] = array('name' => $tax_names[$k], 'percent' => $tax_percents[$k]);
+				}
+			}
+			$this->Item_taxes->save($items_taxes_data, $item_id);
+
+			// Gerenciar upload de imagens
+			$this->handle_images_upload($item_id);
+
+			// Integração com WooCommerce - Enviar ou atualizar o produto no WooCommerce
+			$this->sync_with_woocommerce($item_data, $item_id);
+		} else {
+			// Falha no salvamento
+			echo json_encode(array('success' => false, 'message' => $this->lang->line('items_error_adding_updating') . ' ' . $item_data['name'], 'item_id' => -1));
+		}
+	}
 	private function sync_with_woocommerce($item_data, $item_id)
 	{
-		// Carregar a biblioteca WooCommerce
-		$this->load->library('WooCommerce');
+		$this->load->model('categorie');
 
-		// Preparar os dados para enviar ao WooCommerce
+		$wc_id_category = $this->categorie->get_wc_id($item_id);
+		// Carregar a biblioteca WooCommerce
+		$this->load->library('woocommercelibrary');
+
 		$woo_data = array(
 			'name' => $item_data['name'],
-			'regular_price' => (string)$item_data['unit_price'], // Preço em string conforme a API do WooCommerce requer
+			'regular_price' => (string)$item_data['unit_price'], // Preço regular como string
+			'sale_price' => !empty($item_data['sale_price']) ? (string)$item_data['sale_price'] : null, // Preço promocional
 			'description' => $item_data['description'],
-			'sku' => $item_data['item_number'],
+			'sku' => $item_data['item_number'], // SKU para identificação única
 			'stock_quantity' => (int)$item_data['quantity'],
 			'manage_stock' => true,
 			'status' => 'publish',  // Publicar o produto diretamente
+			'featured' => $item_data['featured'] == 1,  // Se o item é destacado
+			'on_sale' => $item_data['on_sale'] == 1,    // Indicar se está em promoção
 		);
+		// Verificar se a categoria tem um wc_id válido
+		if ($wc_id_category) {
+			// Adiciona a categoria ao produto
+			$woo_data['categories'] = [
+				['id' => $wc_id_category] // Envia o ID da categoria para o WooCommerce
+			];
+		}
+
 
 		// Obter imagens do item
 		$images = $this->get_item_images($item_id);
@@ -245,27 +288,34 @@ class Items extends Secure_area implements iData_controller
 			$woo_data['images'] = $images;
 		}
 
+		// Verificar se o item já foi sincronizado com o WooCommerce
+		$this->db->select('id_wc'); // Seleciona o ID do produto no WooCommerce
+		$this->db->from('items'); // Supondo que a tabela seja 'items'
+		$this->db->where('item_id', $item_id);
+		$query = $this->db->get();
+		$result = $query->row();
+
 		try {
-			// Se for um novo item
-			if ($item_id == -1) {
-				$response = $this->woocommerce->create_product($woo_data);
+			if (!empty($result) && !empty($result->id_wc)) {
+				// Produto já existe no WooCommerce, realizar atualização
+				$product_id = $result->id_wc;
+				$this->wooCommerceLibrary->update_product($product_id, $woo_data);
+				log_message('info', 'Produto atualizado no WooCommerce: ' . $item_data['name']);
 			} else {
-				// Atualizar o produto no WooCommerce usando SKU
-				$response = $this->woocommerce->get_products(array('sku' => $item_data['item_number']));
-				if (!empty($response)) {
-					$product_id = $response[0]->id;
-					$this->woocommerce->update_product($product_id, $woo_data);
-				} else {
-					// Caso o produto não exista, criar um novo
-					$this->woocommerce->create_product($woo_data);
-				}
+				// Produto não existe no WooCommerce, criar um novo
+				$response = $this->wooCommerceLibrary->create_product($woo_data);
+
+				// Atualizar o id_wc na tabela local com o ID retornado pelo WooCommerce
+				$this->db->where('item_id', $item_id);
+				$this->db->update('items', array('id_wc' => $response->id));
+
+				log_message('info', 'Novo produto criado no WooCommerce: ' . $item_data['name']);
 			}
 		} catch (Exception $e) {
 			log_message('error', 'Erro ao sincronizar o item com o WooCommerce: ' . $e->getMessage());
 		}
 	}
 
-	
 	private function get_item_images($item_id)
 	{
 		// Seleciona as imagens do banco de dados
@@ -280,8 +330,8 @@ class Items extends Secure_area implements iData_controller
 		// Organiza as imagens, separando a capa
 		foreach ($query->result() as $row) {
 			$image = [
-				'src' => base_url($row->image_path) // Converte o caminho relativo para um URL absoluto
-				// 'src' => 'https://images.pexels.com/photos/322207/pexels-photo-322207.jpeg?auto=compress&cs=tinysrgb&w=600' // Converte o caminho relativo para um URL absoluto
+				// 'src' => base_url($row->image_path) // Converte o caminho relativo para um URL absoluto
+				'src' => 'https://images.pexels.com/photos/322207/pexels-photo-322207.jpeg?auto=compress&cs=tinysrgb&w=600' // Converte o caminho relativo para um URL absoluto
 			];
 
 			// Verifica se é a capa (is_cover = 1)
@@ -299,9 +349,6 @@ class Items extends Secure_area implements iData_controller
 
 		return $images;
 	}
-
-
-
 
 	private function handle_images_upload($item_id)
 	{
@@ -464,13 +511,53 @@ class Items extends Secure_area implements iData_controller
 	{
 		$items_to_delete = $this->input->post('ids');
 
-		if ($this->Item->delete_list($items_to_delete)) {
-			echo json_encode(array('success' => true, 'message' => $this->lang->line('items_successful_deleted') . ' ' .
-				count($items_to_delete) . ' ' . $this->lang->line('items_one_or_multiple')));
+		// Carregar a biblioteca WooCommerce
+		$this->load->library('woocommercelibrary');
+
+		// Loop para excluir cada item individualmente do sistema e do WooCommerce
+		foreach ($items_to_delete as $item_id) {
+			// Buscar o ID do produto no WooCommerce
+			$this->db->select('id_wc'); // Supondo que você armazene o ID do WooCommerce no campo 'id_wc'
+			$this->db->from('items');
+			$this->db->where('item_id', $item_id);
+			$query = $this->db->get();
+			$result = $query->row();
+
+			if ($result && !empty($result->id_wc)) {
+				try {
+					// Excluir produto do WooCommerce
+					$this->woocommercelibrary->delete_product($result->id_wc);
+
+					// Logar sucesso
+					log_message('info', 'Produto excluído do WooCommerce: ID ' . $result->id_wc);
+				} catch (Exception $e) {
+					// Logar o erro caso a exclusão falhe
+					log_message('error', 'Erro ao excluir produto do WooCommerce: ' . $e->getMessage());
+				}
+			}
+
+			// Excluir o item do sistema local
+			if ($this->Item->delete($item_id)) {
+				log_message('info', 'Item excluído localmente: ID ' . $item_id);
+			} else {
+				log_message('error', 'Erro ao excluir o item localmente: ID ' . $item_id);
+			}
+		}
+
+		// Verificar se todos os itens foram excluídos
+		if (count($items_to_delete) > 0) {
+			echo json_encode(array(
+				'success' => true,
+				'message' => $this->lang->line('items_successful_deleted') . ' ' . count($items_to_delete) . ' ' . $this->lang->line('items_one_or_multiple')
+			));
 		} else {
-			echo json_encode(array('success' => false, 'message' => $this->lang->line('items_cannot_be_deleted')));
+			echo json_encode(array(
+				'success' => false,
+				'message' => $this->lang->line('items_cannot_be_deleted')
+			));
 		}
 	}
+
 
 	function excel()
 	{

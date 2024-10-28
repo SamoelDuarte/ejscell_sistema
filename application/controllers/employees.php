@@ -69,6 +69,7 @@ class Employees extends Person_controller
 		'comments'=>$this->input->post('comments')
 		);
 		$permission_data = $this->input->post("permissions")!=false ? $this->input->post("permissions"):array();
+
 		
 		//Password has been changed OR first time password set
 		if($this->input->post('password')!='')
@@ -83,7 +84,7 @@ class Employees extends Person_controller
 			$employee_data=array('username'=>$this->input->post('username'));
 		}
 		
-		if($this->Employee->save($person_data,$employee_data,$permission_data,$employee_id))
+		if($this->Employee->save($person_data,$employee_id,$employee_data,$permission_data))
 		{
 			//New employee
 			if($employee_id==-1)

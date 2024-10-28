@@ -215,7 +215,7 @@ class Sale_lib
 		$insertkey = $maxkey + 1;
 
 		//array/cart records are identified by $insertkey and item_id is just another field
-		$category = $this->CI->Item->get_info($item_id)->category;
+		$category = $this->CI->Item->get_info($item_id)->categorie;
 		$customer = $this->get_customer();
 
 		if ($customer != -1) {

@@ -39,7 +39,7 @@ echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form', '
 				array(
 					'name' => 'category',
 					'id' => 'category',
-					'value' => $item_info->category
+					'value' => $item_info->category_name
 				)
 			); ?>
 		</div>
@@ -61,6 +61,20 @@ echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form', '
 					'size' => '8',
 					'id' => 'cost_price',
 					'value' => $item_info->cost_price
+				)
+			); ?>
+		</div>
+	</div>
+
+	<div class="field_row clearfix">
+		<?php echo form_label('Preço Atual:', 'Preço Atual', array('class' => 'wide')); ?>
+		<div class='form_field'>
+			<?php echo form_input(
+				array(
+					'name' => 'sale_price',
+					'size' => '8',
+					'id' => 'sale_price',
+					'value' => isset($item_info->sale_price) ? $item_info->sale_price : ''
 				)
 			); ?>
 		</div>
@@ -200,6 +214,34 @@ echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form', '
 	</div>
 
 	<div class="field_row clearfix">
+		<?php echo form_label('Produto em Destaque:', 'Produto em Destaque', array('class' => 'wide')); ?>
+		<div class='form_field'>
+			<?php echo form_checkbox(
+				array(
+					'name' => 'featured',
+					'id' => 'featured',
+					'value' => 1,
+					'checked' => (isset($item_info->featured) && $item_info->featured == 1) ? true : false
+				)
+			); ?>
+		</div>
+	</div>
+
+	<div class="field_row clearfix">
+		<?php echo form_label('Produto em Promoção:', 'Produto em Promoção', array('class' => 'wide')); ?>
+		<div class='form_field'>
+			<?php echo form_checkbox(
+				array(
+					'name' => 'on_sale',
+					'id' => 'on_sale',
+					'value' => 1,
+					'checked' => isset($item_info->on_sale) && $item_info->on_sale == 1 ? true : false
+				)
+			); ?>
+		</div>
+	</div>
+
+	<div class="field_row clearfix">
 		<?php echo form_label($this->lang->line('items_allow_alt_desciption') . ':', 'allow_alt_description', array('class' => 'wide')); ?>
 		<div class='form_field'>
 			<?php echo form_checkbox(
@@ -274,6 +316,46 @@ echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form', '
 <?php
 echo form_close();
 ?>
+<script>
+	// Seleciona o botão de submit pelo ID
+	var submitButton = document.getElementById('submit_btn');
+
+	// Seleciona o formulário para ser enviado manualmente depois
+	var form = document.getElementById('item_form');
+
+	// Quando o botão for clicado
+	submitButton.addEventListener('click', function(e) {
+		// Prevenir o submit imediato
+	
+
+		// Mudar o texto do botão para 'Aguarde...'
+		var dots = 0;
+		submitButton.value = 'Aguarde';
+		// submitButton.disabled = true; // Desativar o botão
+
+		// Função para adicionar os pontos de espera "..."
+		var interval = setInterval(function() {
+			if (dots < 3) {
+				submitButton.value += '.';
+				dots++;
+			} else {
+				submitButton.value = 'Aguarde'; // Resetar texto e começar de novo
+				dots = 0;
+			}
+		}, 500); // Adicionar um ponto a cada 500ms
+
+		// Simulação de 6 segundos (6000ms)
+		setTimeout(function() {
+			clearInterval(interval); // Parar a animação
+			submitButton.value = 'Enviar'; // Texto final de "Aguarde..."
+
+			// Enviar o formulário manualmente após a animação de 6 segundos
+		
+		}, 6000); // 6 segundos
+	});
+</script>
+
+
 <script type='text/javascript'>
 	function previewImages() {
 		var coverSelection = document.getElementById('cover_selection');

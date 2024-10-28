@@ -13,18 +13,19 @@ class Item extends CI_Model
 		return ($query->num_rows() == 1);
 	}
 
-	/*
-	Returns all the items
-	*/
 	function get_all($limit = 10000, $offset = 0)
 	{
+		$this->db->select('items.*, ejs_categories_products.category_name'); // Seleciona os dados de items e o nome da categoria
 		$this->db->from('items');
-		$this->db->where('deleted', 0);
-		$this->db->order_by("name", "asc");
-		$this->db->limit($limit);
-		$this->db->offset($offset);
-		return $this->db->get();
+		$this->db->join('ejs_categories_products', 'items.category_id = ejs_categories_products.category_id', 'left'); // Faz o JOIN com a tabela de categorias
+		$this->db->where('items.deleted', 0); // Filtra por itens que não estão deletados
+		$this->db->order_by('items.name', 'asc'); // Ordena pelos nomes dos itens
+		$this->db->limit($limit); // Define o limite de resultados
+		$this->db->offset($offset); // Define o deslocamento para paginação
+
+		return $this->db->get(); // Retorna o resultado da query
 	}
+
 
 	// Busca as imagens de um item
 	public function get_item_images($item_id)
@@ -41,6 +42,13 @@ class Item extends CI_Model
 		$this->db->where('deleted', 0);
 		return $this->db->count_all_results();
 	}
+
+	public function count_by_category($category_id)
+	{
+		$this->db->where('category_id', $category_id);
+		return $this->db->count_all_results('items'); // Substitua 'items' pelo nome da sua tabela de itens
+	}
+
 
 	function get_all_filtered($no_description, $low_inventory = 0, $is_serialized = 0)
 	{
@@ -69,27 +77,35 @@ class Item extends CI_Model
 	*/
 	function get_info($item_id)
 	{
+		$this->db->select('items.*, ejs_categories_products.category_name'); // Seleciona todos os campos da tabela items e category_name
 		$this->db->from('items');
+		// Altere 'category_id' e 'id' conforme necessário
+		$this->db->join('ejs_categories_products', 'items.category_id = ejs_categories_products.category_id', 'left'); // Use o nome correto da coluna aqui
 		$this->db->where('item_id', $item_id);
 
 		$query = $this->db->get();
 
 		if ($query->num_rows() == 1) {
-			return $query->row();
+			return $query->row(); // Retorna o objeto do item com a categoria
 		} else {
-			//Get empty base parent object, as $item_id is NOT an item
+			// Get empty base parent object, as $item_id is NOT an item
 			$item_obj = new stdClass();
 
-			//Get all the fields from items table
+			// Get all the fields from items table
 			$fields = $this->db->list_fields('items');
 
 			foreach ($fields as $field) {
 				$item_obj->$field = '';
 			}
 
+			$item_obj->category_name = ''; // Adiciona a propriedade category_name ao objeto
+
 			return $item_obj;
 		}
 	}
+
+
+
 
 	/*
 	Get an item id given an item number
@@ -119,9 +135,15 @@ class Item extends CI_Model
 		return $this->db->get();
 	}
 
+
 	/*
 	Inserts or updates a item
 	*/
+	function update_category_id($item_id, $categorie_id)
+	{
+		$this->db->where('item_id', $item_id);
+		$this->db->update('items', ['category_id' => $categorie_id]);
+	}
 	function save(&$item_data, $item_id = false, $images = array(), $cover_image_index = null)
 	{
 		// Verifica se é um novo item ou um item existente
@@ -145,9 +167,6 @@ class Item extends CI_Model
 	}
 	function save_item_images($item_id, $images, $cover_image_index = null)
 	{
-
-		print_r($images);
-		exit;
 		$this->load->library('upload');
 
 		// Itera sobre as imagens para salvá-las no banco de dados
@@ -235,7 +254,7 @@ class Item extends CI_Model
 		$this->db->order_by("category", "asc");
 		$by_category = $this->db->get();
 		foreach ($by_category->result() as $row) {
-			$suggestions[] = $row->category;
+			$suggestions[] = $row->categorie;
 		}
 
 		// Busca por número do item
@@ -290,40 +309,98 @@ class Item extends CI_Model
 	{
 		$suggestions = array();
 		$this->db->distinct();
-		$this->db->select('category');
-		$this->db->from('items');
-		$this->db->like('category', $search);
-		$this->db->where('deleted', 0);
-		$this->db->order_by("category", "asc");
-		$by_category = $this->db->get();
+		$this->db->select('category_name'); // Alterado para a coluna da tabela de categorias
+		$this->db->from('ejs_categories_products'); // Usando a tabela de categorias
+		$this->db->like('category_name', $search); // Aplicando o filtro de pesquisa na coluna correta
+		$this->db->order_by("category_name", "asc"); // Ordenando os resultados pela coluna correta
+
+		$by_category = $this->db->get(); // Executa a consulta
+
 		foreach ($by_category->result() as $row) {
-			$suggestions[] = $row->category;
+			$suggestions[] = $row->category_name; // Adiciona as categorias às sugestões
+		}
+
+		return $suggestions; // Retorna as sugestões
+	}
+
+
+	function get_distinct_categories()
+	{
+		$suggestions = array();
+
+		// Seleciona categorias distintas da tabela ejs_categories_products
+		$this->db->distinct();
+		$this->db->select('category_name');
+		$this->db->from('ejs_categories_products');
+		$this->db->order_by("category_name", "asc");
+
+		// Executa a consulta
+		$by_category = $this->db->get();
+
+		// Preenche o array com os nomes das categorias
+		foreach ($by_category->result() as $row) {
+			$suggestions[] = $row->category_name;
 		}
 
 		return $suggestions;
 	}
+
 
 	/*
 	Preform a search on items
 	*/
 	function search($search)
 	{
-		$this->db->from('items');
-		$this->db->where("(name LIKE '%" . $this->db->escape_like_str($search) . "%' or 
-		item_number LIKE '%" . $this->db->escape_like_str($search) . "%' or 
-		category LIKE '%" . $this->db->escape_like_str($search) . "%') and deleted=0");
-		$this->db->order_by("name", "asc");
+		// Seleciona os campos desejados, incluindo o nome da categoria
+		$this->db->select('ejs_items.*, ejs_categories_products.category_name');
+
+		// Define a tabela principal (items)
+		$this->db->from('ejs_items');
+
+		// Faz o join com a tabela de categorias
+		$this->db->join('ejs_categories_products', 'ejs_items.category_id = ejs_categories_products.category_id', 'inner');
+
+		// Adiciona as condições de pesquisa no nome do item, número do item ou nome da categoria
+		$this->db->where("(ejs_items.name LIKE '%" . $this->db->escape_like_str($search) . "%' 
+                        OR ejs_items.item_number LIKE '%" . $this->db->escape_like_str($search) . "%' 
+                        OR ejs_categories_products.category_name LIKE '%" . $this->db->escape_like_str($search) . "%') 
+                        AND ejs_items.deleted = 0");
+
+		// Ordena os resultados pelo nome do item
+		$this->db->order_by("items.name", "asc");
+
+		// Retorna os resultados da consulta
 		return $this->db->get();
 	}
 
+
 	function get_categories()
 	{
-		$this->db->select('category');
-		$this->db->from('items');
-		$this->db->where('deleted', 0);
-		$this->db->distinct();
-		$this->db->order_by("category", "asc");
+		// Seleciona a coluna 'category_name' da tabela de categorias
+		$this->db->select('category_name');
+		$this->db->from('ejs_categories_products'); // Tabela de categorias
+		$this->db->distinct(); // Garante que sejam retornadas categorias distintas
+		$this->db->order_by("category_name", "asc"); // Ordena as categorias por nome
 
-		return $this->db->get();
+		return $this->db->get(); // Executa a consulta e retorna o resultado
+	}
+
+	public function get_items_without_wc_id($limit = 5)
+	{
+		// Seleciona os itens onde o campo id_wc é NULL ou vazio
+		$this->db->where('id_wc IS NULL');
+		$this->db->or_where('id_wc', '');
+		$this->db->limit($limit);
+
+		// Retorna os resultados da tabela 'items'
+		return $this->db->get('items'); // 'items' é o nome da tabela de produtos
+	}
+
+	// Método para atualizar o campo id_wc de um produto
+	public function update_wc_id($item_id, $wc_id)
+	{
+		// Atualiza o campo id_wc do item com o id_wc fornecido
+		$this->db->where('item_id', $item_id);
+		$this->db->update('items', ['id_wc' => $wc_id]);
 	}
 }

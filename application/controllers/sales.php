@@ -44,7 +44,7 @@ class Sales extends Secure_area
 
 				$this->db->from('customer_category_link');
 				$this->db->where('person_id', $this->input->post("customer"));
-				$this->db->where('category_name', $category->category);
+				$this->db->where('category_name', $category->categorie);
 				$verifydesconto = $this->db->get();
 
 

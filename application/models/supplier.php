@@ -76,9 +76,9 @@ class Supplier extends Person
 	}
 
 	/*
-	Inserts or updates a suppliers
-	*/
-	function save(&$person_data, $supplier_id = false, &$supplier_data = null)
+     * Inserts or updates a supplier
+     */
+	public function save($person_data, $supplier_id = false, $supplier_data = null)
 	{
 		$success = false;
 
@@ -90,7 +90,7 @@ class Supplier extends Person
 			// Verifica se o fornecedor não existe (inserção) ou se já existe (atualização)
 			if (!$supplier_id || !$this->exists($supplier_id)) {
 				// Se não existe, insere um novo fornecedor
-				$supplier_data['person_id'] = $person_data['person_id'];
+				$supplier_data['person_id'] = $person_data['person_id']; // Atribui person_id aos dados do fornecedor
 				$success = $this->db->insert('suppliers', $supplier_data);
 				$supplier_id = $this->db->insert_id(); // Captura o ID do novo registro
 			} else {

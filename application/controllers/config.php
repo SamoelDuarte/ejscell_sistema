@@ -11,16 +11,36 @@ class Config extends Secure_area
 	{
 		parent::__construct('config');
 		$this->load->model('device_model');
+		$this->load->model('categorie');
 	}
 
-	public function test()
+	public function sync_categories()
 	{
-		$this->load->library('WooCommerce');
+		// Passo 1: Buscar todos os produtos
+		$products = $this->Item->get_all(); // Presume que você tenha um método para obter todos os produtos
 
-		$products = $this->woocommerce->get_products();
+		foreach ($products->result() as $product) {
 
-        // Exibir os produtos
-        print_r($products);
+
+			// Pega a categoria do produto como texto
+			$category_name = $product->categorie; // Ajuste para o nome correto da coluna
+
+			// Passo 2: Verificar se a categoria existe na tabela ejs_categories_products
+			$category = $this->categorie->get_by_name($category_name); // Presume que você tenha um método para buscar categorias pelo nome
+
+			// Passo 3: Se a categoria não existir, insira-a
+			if (!$category) {
+				$category_name = ucwords(strtolower($category_name)); // Torna a primeira letra de cada palavra maiúscula
+				$category_id = $this->categorie->insert([
+					'category_name' => $category_name
+				]); // Insere a nova categoria e captura o ID
+			} else {
+				$category_id = $category->categorie_id; // Categoria já existe, captura o ID existente
+			}
+
+			// Passo 4: Atualizar o produto com o category_id
+			$this->Item->update_category_id($product->item_id, $category_id); // Atualiza o produto com o novo category_id
+		}
 	}
 
 	public function index()

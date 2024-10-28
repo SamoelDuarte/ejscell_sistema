@@ -134,86 +134,106 @@ function get_supplier_data_row($supplier,$controller)
 /*
 Gets the html table to manage items.
 */
-function get_items_manage_table($items,$controller)
+function get_items_manage_table($items, $controller)
 {
-	$CI =& get_instance();
-	$table='<table class="tablesorter" id="sortable_table">';
-	
-	$headers = array('<input type="checkbox" id="select_all" />', 
-	$CI->lang->line('items_item_number'),
-	$CI->lang->line('items_name'),
-	$CI->lang->line('items_category'),
-	$CI->lang->line('items_cost_price'),
-	$CI->lang->line('items_unit_price'),
-	$CI->lang->line('items_tax_percents'),
-	$CI->lang->line('items_quantity'),
-	'&nbsp;',
-	$CI->lang->line('items_inventory')
-	);
-	
-	$table.='<thead><tr>';
-	foreach($headers as $header)
-	{
-		$table.="<th>$header</th>";
-	}
-	$table.='</tr></thead><tbody>';
-	$table.=get_items_manage_table_data_rows($items,$controller);
-	$table.='</tbody></table>';
-	return $table;
+    $CI =& get_instance();
+    $table = '<table class="tablesorter" id="sortable_table">';
+    
+    // Cabeçalhos da tabela, incluindo o novo cabeçalho para o wc_id
+    $headers = array(
+        '<input type="checkbox" id="select_all" />', 
+        $CI->lang->line('items_item_number'),
+		'Loja Virtual', // Novo cabeçalho para a coluna do wc_id,
+        $CI->lang->line('items_name'),
+        $CI->lang->line('items_category'),
+        $CI->lang->line('items_cost_price'),
+        $CI->lang->line('items_unit_price'),
+        $CI->lang->line('items_tax_percents'),
+        $CI->lang->line('items_quantity'),
+        '&nbsp;',
+        $CI->lang->line('items_inventory'),
+      
+    );
+    
+    $table .= '<thead><tr>';
+    foreach ($headers as $header) {
+        $table .= "<th>$header</th>";
+    }
+    $table .= '</tr></thead><tbody>';
+    
+    // Chama a função que retorna as linhas da tabela
+    $table .= get_items_manage_table_data_rows($items, $controller);
+    
+    $table .= '</tbody></table>';
+    return $table;
 }
+
 
 /*
 Gets the html data rows for the items.
 */
-function get_items_manage_table_data_rows($items,$controller)
+function get_items_manage_table_data_rows($items, $controller)
 {
-	$CI =& get_instance();
-	$table_data_rows='';
-	
-	foreach($items->result() as $item)
-	{
-		$table_data_rows.=get_item_data_row($item,$controller);
-	}
-	
-	if($items->num_rows()==0)
-	{
-		$table_data_rows.="<tr><td colspan='11'><div class='warning_message' style='padding:7px;'>".$CI->lang->line('items_no_items_to_display')."</div></tr></tr>";
-	}
-	
-	return $table_data_rows;
+    $CI =& get_instance();
+    $table_data_rows = '';
+
+    foreach ($items->result() as $item) {
+        // Obtém a linha de dados do item
+        $table_data_rows .= get_item_data_row($item, $controller);
+    }
+
+    if ($items->num_rows() == 0) {
+        $table_data_rows .= "<tr><td colspan='11'><div class='warning_message' style='padding:7px;'>" . $CI->lang->line('items_no_items_to_display') . "</div></td></tr>";
+    }
+
+    return $table_data_rows;
 }
 
-function get_item_data_row($item,$controller)
-{
-	$CI =& get_instance();
-	$item_tax_info=$CI->Item_taxes->get_info($item->item_id);
-	$tax_percents = '';
-	foreach($item_tax_info as $tax_info)
-	{
-		$tax_percents.=$tax_info['percent']. '%, ';
-	}
-	$tax_percents=substr($tax_percents, 0, -2);
-	$controller_name=strtolower(get_class($CI));
-	$width = $controller->get_form_width();
 
-	$table_data_row='<tr>';
-	$table_data_row.="<td width='3%'><input type='checkbox' id='item_$item->item_id' value='".$item->item_id."'/></td>";
-	$table_data_row.='<td width="15%">'.$item->item_number.'</td>';
-	$table_data_row.='<td width="20%">'.$item->name.'</td>';
-	$table_data_row.='<td width="14%">'.$item->category.'</td>';
-	$table_data_row.='<td width="14%">'.to_currency($item->cost_price).'</td>';
-	$table_data_row.='<td width="14%">'.to_currency($item->unit_price).'</td>';
-	$table_data_row.='<td width="14%">'.$tax_percents.'</td>';	
-	$table_data_row.='<td width="14%">'.$item->quantity.'</td>';
-	$table_data_row.='<td width="5%">'.anchor($controller_name."/view/$item->item_id/width:$width", $CI->lang->line('common_edit'),array('class'=>'thickbox','title'=>$CI->lang->line($controller_name.'_update'))).'</td>';		
-	
-	//Ramel Inventory Tracking
-	$table_data_row.='<td width="10%">'.anchor($controller_name."/inventory/$item->item_id/width:$width", $CI->lang->line('common_inv'),array('class'=>'thickbox','title'=>$CI->lang->line($controller_name.'_count')))./*'</td>';//inventory count	
-	$table_data_row.='<td width="5%">'*/'&nbsp;&nbsp;&nbsp;&nbsp;'.anchor($controller_name."/count_details/$item->item_id/width:$width", $CI->lang->line('common_det'),array('class'=>'thickbox','title'=>$CI->lang->line($controller_name.'_details_count'))).'</td>';//inventory details	
-	
-	$table_data_row.='</tr>';
-	return $table_data_row;
+function get_item_data_row($item, $controller)
+{
+    $CI =& get_instance();
+    $item_tax_info = $CI->Item_taxes->get_info($item->item_id);
+    $tax_percents = '';
+    
+    // Concatena as porcentagens de impostos
+    foreach ($item_tax_info as $tax_info) {
+        $tax_percents .= $tax_info['percent'] . '%, ';
+    }
+    $tax_percents = substr($tax_percents, 0, -2); // Remove a última vírgula
+
+    $controller_name = strtolower(get_class($CI));
+    $width = $controller->get_form_width();
+
+    // Inicia a linha da tabela
+    $table_data_row = '<tr>';
+    $table_data_row .= "<td width='3%'><input type='checkbox' id='item_$item->item_id' value='" . $item->item_id . "'/></td>";
+    $table_data_row .= '<td width="15%">' . $item->item_number . '</td>';
+	   // Adicionando a nova coluna para id_wc
+	   if (!empty($item->id_wc)) {
+        $table_data_row .= '<td><span style="color: green;">✓</span></td>'; // Check verde se id_wc existir
+    } else {
+        $table_data_row .= '<td><span style="color: red;">✗</span></td>'; // X vermelho se não existir
+    }
+    $table_data_row .= '<td width="20%">' . $item->name . '</td>';
+    $table_data_row .= '<td width="14%">' . $item->category_name . '</td>';
+    $table_data_row .= '<td width="14%">' . to_currency($item->cost_price) . '</td>';
+    $table_data_row .= '<td width="14%">' . to_currency($item->unit_price) . '</td>';
+    $table_data_row .= '<td width="14%">' . $tax_percents . '</td>';
+    $table_data_row .= '<td width="14%">' . $item->quantity . '</td>';
+    $table_data_row .= '<td width="5%">' . anchor($controller_name . "/view/$item->item_id/width:$width", $CI->lang->line('common_edit'), array('class' => 'thickbox', 'title' => $CI->lang->line($controller_name . '_update'))) . '</td>';
+
+    // Ramel Inventory Tracking
+    $table_data_row .= '<td width="10%">' . anchor($controller_name . "/inventory/$item->item_id/width:$width", $CI->lang->line('common_inv'), array('class' => 'thickbox', 'title' => $CI->lang->line($controller_name . '_count'))) . '&nbsp;&nbsp;&nbsp;&nbsp;' . anchor($controller_name . "/count_details/$item->item_id/width:$width", $CI->lang->line('common_det'), array('class' => 'thickbox', 'title' => $CI->lang->line($controller_name . '_details_count'))) . '</td>';
+
+ 
+
+    $table_data_row .= '</tr>';
+
+    return $table_data_row;
 }
+
+
 
 /*
 Gets the html table to manage giftcards.
