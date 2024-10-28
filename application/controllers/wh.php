@@ -1,7 +1,13 @@
 <?php
 
-class WH
+class WH extends CI_Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+       
+    }
+
     public function woocommerceOrders()
     {
         // Lê o conteúdo da requisição (JSON enviado pelo WooCommerce)
