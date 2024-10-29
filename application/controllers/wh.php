@@ -12,6 +12,14 @@ class WH extends CI_Controller
         // Lê o conteúdo da requisição (JSON enviado pelo WooCommerce)
         $data = file_get_contents('php://input');
 
+        // Verifica se algum dado foi recebido
+        if (empty($data)) {
+            log_message('error', 'Nenhum dado JSON recebido.');
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Nenhum dado JSON recebido.']);
+            return;
+        }
+
         // Log do JSON recebido
         log_message('error', 'WooCommerce Order JSON recebido: ' . $data);
 
@@ -27,6 +35,13 @@ class WH extends CI_Controller
         }
 
         // Verifica se o pedido existe pelo 'order_id'
+        if (!isset($decoded_data['id'])) {
+            log_message('error', 'ID do pedido não encontrado no JSON.');
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'ID do pedido não encontrado.']);
+            return;
+        }
+
         $order_id = $decoded_data['id'];
 
         // Conexão com o banco de dados
@@ -63,40 +78,44 @@ class WH extends CI_Controller
         }
 
         // Processa os itens do pedido
-        foreach ($decoded_data['line_items'] as $item) {
-            $item_id = $item['id'];
+        if (isset($decoded_data['line_items']) && is_array($decoded_data['line_items'])) {
+            foreach ($decoded_data['line_items'] as $item) {
+                $item_id = $item['id'];
 
-            // Verifica se o item já existe na tabela 'ejs_order_items'
-            $existing_item = $this->db->get_where('ejs_order_items', ['item_id' => $item_id, 'order_id' => $order_id])->row();
+                // Verifica se o item já existe na tabela 'ejs_order_items'
+                $existing_item = $this->db->get_where('ejs_order_items', ['item_id' => $item_id, 'order_id' => $order_id])->row();
 
-            if ($existing_item) {
-                // Atualiza o item se ele já existe
-                $this->db->where(['item_id' => $item_id, 'order_id' => $order_id]);
-                $this->db->update('ejs_order_items', [
-                    'product_id' => $item['product_id'],
-                    'product_name' => $item['name'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'subtotal' => $item['subtotal'],
-                    'total' => $item['total']
-                ]);
+                if ($existing_item) {
+                    // Atualiza o item se ele já existe
+                    $this->db->where(['item_id' => $item_id, 'order_id' => $order_id]);
+                    $this->db->update('ejs_order_items', [
+                        'product_id' => $item['product_id'],
+                        'product_name' => $item['name'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                        'subtotal' => $item['subtotal'],
+                        'total' => $item['total']
+                    ]);
 
-                log_message('error', 'Item do pedido atualizado com sucesso: Item ID ' . $item_id . ' para Pedido ID ' . $order_id);
-            } else {
-                // Insere o item se ele não existe
-                $this->db->insert('ejs_order_items', [
-                    'order_id' => $order_id,
-                    'item_id' => $item_id,
-                    'product_id' => $item['product_id'],
-                    'product_name' => $item['name'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'subtotal' => $item['subtotal'],
-                    'total' => $item['total']
-                ]);
+                    log_message('error', 'Item do pedido atualizado com sucesso: Item ID ' . $item_id . ' para Pedido ID ' . $order_id);
+                } else {
+                    // Insere o item se ele não existe
+                    $this->db->insert('ejs_order_items', [
+                        'order_id' => $order_id,
+                        'item_id' => $item_id,
+                        'product_id' => $item['product_id'],
+                        'product_name' => $item['name'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                        'subtotal' => $item['subtotal'],
+                        'total' => $item['total']
+                    ]);
 
-                log_message('error', 'Item do pedido inserido com sucesso: Item ID ' . $item_id . ' para Pedido ID ' . $order_id);
+                    log_message('error', 'Item do pedido inserido com sucesso: Item ID ' . $item_id . ' para Pedido ID ' . $order_id);
+                }
             }
+        } else {
+            log_message('error', 'Nenhum item encontrado no pedido ou estrutura incorreta.');
         }
 
         // Retorna uma resposta de sucesso para o WooCommerce
