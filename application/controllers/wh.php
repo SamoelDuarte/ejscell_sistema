@@ -11,115 +11,107 @@ class WH extends CI_Controller
     {
         // Lê o conteúdo da requisição (JSON enviado pelo WooCommerce)
         $data = file_get_contents('php://input');
-
-        // Verifica se algum dado foi recebido
-        if (empty($data)) {
-            log_message('error', 'Nenhum dado JSON recebido.');
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Nenhum dado JSON recebido.']);
-            return;
-        }
-
-        // Log do JSON recebido
-        log_message('error', 'WooCommerce Order JSON recebido: ' . $data);
-
-        // Decodifica o JSON para um array associativo
         $decoded_data = json_decode($data, true);
 
-        // Verificação de erro na decodificação JSON
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            log_message('error', 'Erro ao decodificar JSON: ' . json_last_error_msg());
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'Erro ao processar JSON.']);
-            return;
-        }
-
-        // Verifica se o pedido existe pelo 'order_id'
-        if (!isset($decoded_data['id'])) {
-            log_message('error', 'ID do pedido não encontrado no JSON.');
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'message' => 'ID do pedido não encontrado.']);
-            return;
-        }
-
+        // Extrai as informações do pedido
         $order_id = $decoded_data['id'];
+        $status = $decoded_data['status'];
+        $created_at = date('Y-m-d H:i:s', strtotime($decoded_data['date_created']));
+        $updated_at = date('Y-m-d H:i:s', strtotime($decoded_data['date_modified']));
+        $total_amount = $decoded_data['total'];
+        $discount_total = $decoded_data['discount_total'];
+        $shipping_cost = $decoded_data['shipping_total'];
+        $customer_id = $decoded_data['customer_id'];
+        $payment_method = $decoded_data['payment_method'];
+        $customer_ip = $decoded_data['customer_ip_address'];
+        $customer_user_agent = $decoded_data['customer_user_agent'];
+        $order_key = $decoded_data['order_key'];
+        $order_number = $decoded_data['number'];
 
-        // Conexão com o banco de dados
-        $this->load->database();
+        // Verifica se o pedido já existe no banco de dados
+        $this->db->where('order_id', $order_id);
+        $query = $this->db->get('ejs_orders');
 
-        // Verifica se o pedido já existe na tabela 'ejs_orders'
-        $existing_order = $this->db->get_where('ejs_orders', ['order_id' => $order_id])->row();
-
-        if ($existing_order) {
-            // Atualiza o pedido se ele já existe
+        if ($query->num_rows() > 0) {
+            // Atualiza o pedido
+            $data = array(
+                'status' => $status,
+                'created_at' => $created_at,
+                'updated_at' => $updated_at,
+                'total_amount' => $total_amount,
+                'discount_total' => $discount_total,
+                'shipping_cost' => $shipping_cost,
+                'customer_id' => $customer_id,
+                'payment_method' => $payment_method,
+                'customer_ip' => $customer_ip,
+                'customer_user_agent' => $customer_user_agent,
+                'order_key' => $order_key,
+                'order_number' => $order_number
+            );
             $this->db->where('order_id', $order_id);
-            $this->db->update('ejs_orders', [
-                'status' => $decoded_data['status'],
-                'total_amount' => $decoded_data['total'],
-                'shipping_cost' => $decoded_data['shipping_total'],
-                'created_at' => $decoded_data['date_created'],
-                'updated_at' => $decoded_data['date_modified']
-            ]);
-
-            log_message('error', 'Pedido atualizado com sucesso: ID ' . $order_id);
+            $this->db->update('ejs_orders', $data);
         } else {
-            // Insere o pedido se ele não existe
-            $this->db->insert('ejs_orders', [
+            // Insere um novo pedido
+            $data = array(
                 'order_id' => $order_id,
-                'customer_name' => $decoded_data['billing']['first_name'] . ' ' . $decoded_data['billing']['last_name'],
-                'status' => $decoded_data['status'],
-                'total_amount' => $decoded_data['total'],
-                'shipping_cost' => $decoded_data['shipping_total'],
-                'created_at' => $decoded_data['date_created'],
-                'updated_at' => $decoded_data['date_modified']
-            ]);
-
-            log_message('error', 'Pedido inserido com sucesso: ID ' . $order_id);
+                'status' => $status,
+                'created_at' => $created_at,
+                'updated_at' => $updated_at,
+                'total_amount' => $total_amount,
+                'discount_total' => $discount_total,
+                'shipping_cost' => $shipping_cost,
+                'customer_id' => $customer_id,
+                'payment_method' => $payment_method,
+                'customer_ip' => $customer_ip,
+                'customer_user_agent' => $customer_user_agent,
+                'order_key' => $order_key,
+                'order_number' => $order_number
+            );
+            $this->db->insert('ejs_orders', $data);
         }
 
         // Processa os itens do pedido
-        if (isset($decoded_data['line_items']) && is_array($decoded_data['line_items'])) {
-            foreach ($decoded_data['line_items'] as $item) {
-                $item_id = $item['id'];
+        foreach ($decoded_data['line_items'] as $item) {
+            $item_id = $item['id'];
+            $product_id = $item['product_id'];
+            $product_name = $item['name'];
+            $quantity = $item['quantity'];
+            $price = $item['price'];
+            $subtotal = $item['subtotal'];
+            $total = $item['total'];
 
-                // Verifica se o item já existe na tabela 'ejs_order_items'
-                $existing_item = $this->db->get_where('ejs_order_items', ['item_id' => $item_id, 'order_id' => $order_id])->row();
+            // Verifica se o item já existe
+            $this->db->where('item_id', $item_id);
+            $this->db->where('order_id', $order_id);
+            $query = $this->db->get('ejs_order_items');
 
-                if ($existing_item) {
-                    // Atualiza o item se ele já existe
-                    $this->db->where(['item_id' => $item_id, 'order_id' => $order_id]);
-                    $this->db->update('ejs_order_items', [
-                        'product_id' => $item['product_id'],
-                        'product_name' => $item['name'],
-                        'quantity' => $item['quantity'],
-                        'price' => $item['price'],
-                        'subtotal' => $item['subtotal'],
-                        'total' => $item['total']
-                    ]);
-
-                    log_message('error', 'Item do pedido atualizado com sucesso: Item ID ' . $item_id . ' para Pedido ID ' . $order_id);
-                } else {
-                    // Insere o item se ele não existe
-                    $this->db->insert('ejs_order_items', [
-                        'order_id' => $order_id,
-                        'item_id' => $item_id,
-                        'product_id' => $item['product_id'],
-                        'product_name' => $item['name'],
-                        'quantity' => $item['quantity'],
-                        'price' => $item['price'],
-                        'subtotal' => $item['subtotal'],
-                        'total' => $item['total']
-                    ]);
-
-                    log_message('error', 'Item do pedido inserido com sucesso: Item ID ' . $item_id . ' para Pedido ID ' . $order_id);
-                }
+            if ($query->num_rows() > 0) {
+                // Atualiza o item
+                $data = array(
+                    'product_id' => $product_id,
+                    'product_name' => $product_name,
+                    'quantity' => $quantity,
+                    'price' => $price,
+                    'subtotal' => $subtotal,
+                    'total' => $total
+                );
+                $this->db->where('item_id', $item_id);
+                $this->db->where('order_id', $order_id);
+                $this->db->update('ejs_order_items', $data);
+            } else {
+                // Insere um novo item
+                $data = array(
+                    'item_id' => $item_id,
+                    'order_id' => $order_id,
+                    'product_id' => $product_id,
+                    'product_name' => $product_name,
+                    'quantity' => $quantity,
+                    'price' => $price,
+                    'subtotal' => $subtotal,
+                    'total' => $total
+                );
+                $this->db->insert('ejs_order_items', $data);
             }
-        } else {
-            log_message('error', 'Nenhum item encontrado no pedido ou estrutura incorreta.');
         }
-
-        // Retorna uma resposta de sucesso para o WooCommerce
-        header('Content-Type: application/json');
-        echo json_encode(['success' => true, 'message' => 'Pedido recebido e processado com sucesso.']);
     }
 }
