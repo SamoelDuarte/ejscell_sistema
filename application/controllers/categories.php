@@ -6,7 +6,7 @@ class Categories extends Secure_area
 	function __construct()
 	{
 		parent::__construct('categories');
-		$this->load->model('categorie');
+		$this->load->model('Categorie');
 		// Carregar a biblioteca WooCommerce
 		$this->load->library('WooCommerceLibrary');
 		// Atribua a instância à propriedade
@@ -15,7 +15,7 @@ class Categories extends Secure_area
 
 	public function index()
 	{
-		$this->load->model('categorie');
+		$this->load->model('Categorie');
 		$this->load->view('categories/manage');
 	}
 
