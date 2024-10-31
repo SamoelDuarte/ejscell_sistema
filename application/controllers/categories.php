@@ -8,7 +8,7 @@ class Categories extends Secure_area
 		parent::__construct('categories');
 		$this->load->model('categorie');
 		// Carregar a biblioteca WooCommerce
-		$this->load->library('WoocommerceLibrary');
+		$this->load->library('WooCommerceLibrary');
 		// Atribua a instância à propriedade
 		$this->wooCommerceLibrary = new WooCommerceLibrary();
 	}
