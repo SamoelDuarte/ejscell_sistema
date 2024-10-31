@@ -16,29 +16,30 @@ class Order extends CI_Model
 
         return $orders;
     }
-    // Função para formatar a data de criação em tempo relativo
-    private function format_created_at($created_at)
-    {
-        $timestamp = strtotime($created_at);
-        $now = time();
-        $difference = $now - $timestamp;
+   // Função para formatar a data de criação em tempo relativo
+private function format_created_at($created_at)
+{
+    $timestamp = strtotime($created_at);
+    $now = time();
+    $difference = $now - $timestamp;
 
-        // Condições para retornar o tempo relativo
-        if ($difference < 3600) {
-            // Se for dentro de uma hora, mostra em minutos
-            $minutes = floor($difference / 60);
-            return ($minutes <= 1) ? 'há 1 minuto' : "há $minutes minutos";
-        } elseif ($difference < 86400) {
-            // Se for hoje (menos de 24 horas), mostra "hoje"
-            return 'hoje';
-        } elseif ($difference < 172800) {
-            // Se for ontem (menos de 48 horas), mostra "ontem"
-            return 'ontem';
-        } else {
-            // Se for mais de 2 dias, formata como dd/mm/aaaa
-            return date('d/m/Y', $timestamp);
-        }
+    // Condições para retornar o tempo relativo
+    if ($difference < 3600) {
+        // Se for dentro de uma hora, mostra em minutos
+        $minutes = floor($difference / 60);
+        return ($minutes <= 1) ? 'há 1 minuto' : "há $minutes minutos";
+    } elseif ($difference < 86400 && date('d', $now) == date('d', $timestamp)) {
+        // Se for hoje, mostra "hoje às HH:MM"
+        return 'hoje às ' . date('H:i', $timestamp);
+    } elseif ($difference < 172800) {
+        // Se for ontem (menos de 48 horas), mostra "ontem"
+        return 'ontem';
+    } else {
+        // Se for mais de 2 dias, formata como dd/mm/aaaa
+        return date('d/m/Y', $timestamp);
     }
+}
+
     // Função para traduzir status para português
     private function translate_status($status)
     {
