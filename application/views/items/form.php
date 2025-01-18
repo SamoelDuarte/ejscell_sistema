@@ -300,8 +300,6 @@ echo form_open('items/save/' . $item_info->item_id, array('id' => 'item_form', '
 	</div>
 
 
-
-
 	<?php
 	echo form_submit(
 		array(
@@ -326,7 +324,7 @@ echo form_close();
 	// Quando o botão for clicado
 	submitButton.addEventListener('click', function(e) {
 		// Prevenir o submit imediato
-	
+
 
 		// Mudar o texto do botão para 'Aguarde...'
 		var dots = 0;
@@ -350,7 +348,7 @@ echo form_close();
 			submitButton.value = 'Enviar'; // Texto final de "Aguarde..."
 
 			// Enviar o formulário manualmente após a animação de 6 segundos
-		
+
 		}, 6000); // 6 segundos
 	});
 </script>

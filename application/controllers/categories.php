@@ -95,7 +95,6 @@ class Categories extends Secure_area
 		}
 	}
 
-
 	public function update()
 	{
 		$this->load->model('Categorie');
